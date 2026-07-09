@@ -448,6 +448,7 @@
     .status-soon { background: rgba(247, 183, 49, 0.16); color: #9c6400; }
     .status-today { background: rgba(255, 122, 89, 0.16); color: #c95d18; }
     .status-expired { background: rgba(234, 84, 85, 0.14); color: #bc1f34; }
+    .status-neutral { background: rgba(114, 128, 142, 0.14); color: #5f6c78; }
 
     .empty-box {
       min-height: 180px;
@@ -986,6 +987,43 @@
       margin-bottom: 14px;
     }
 
+
+    .menu-helper {
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .menu-helper-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .prompt-btn {
+      border-radius: 999px;
+      padding: 10px 13px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .auth-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0 14px;
+    }
+
+    .provider-only-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1026,6 +1064,103 @@
       border: 1px solid var(--line);
       font-weight: 950;
       color: var(--muted);
+    }
+
+
+    .signup-copy {
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 8px 0 18px;
+      font-size: 14px;
+    }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 18px 0 12px;
+    }
+
+    .provider-btn {
+      padding: 14px 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.88);
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .provider-btn.google { color: #24313d; }
+    .provider-btn.naver { background: #03c75a; color: white; border-color: rgba(3,199,90,0.35); }
+    .provider-btn.kakao { background: #fee500; color: #3a2d20; border-color: rgba(254,229,0,0.42); }
+
+    .signup-note {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      margin-top: 10px;
+    }
+
+    .text-link-btn {
+      background: transparent;
+      color: var(--muted);
+      padding: 0;
+      font-weight: 900;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+
+    .account-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 132px;
+    }
+
+    .account-summary {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0 18px;
+    }
+
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+    }
+
+    .account-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .account-value {
+      font-weight: 900;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .account-help {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
     }
 
     .toast {
@@ -1116,25 +1251,98 @@
     }
 
     @media (max-width: 760px) {
-      .app-shell { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .app-shell { width: min(100% - 14px, 1180px); padding-top: 10px; }
       .topbar {
         border-radius: 26px;
         flex-direction: column;
         align-items: stretch;
         position: static;
+        padding: 16px;
       }
       .brand { min-width: 0; }
-      .tabs { overflow-x: auto; justify-content: start; }
-      .quick-actions { justify-content: space-between; }
+      .tabs {
+        overflow-x: auto;
+        justify-content: start;
+        width: 100%;
+      }
+      .tab-btn {
+        flex: 1 0 auto;
+        justify-content: center;
+        min-width: 104px;
+        padding: 12px 14px;
+      }
+      .quick-actions { justify-content: stretch; flex-direction: column; }
+      .quick-actions .primary-btn, .quick-actions .account-btn { width: 100%; }
       .hero-card, .panel { padding: 20px; }
-      .stats-grid, .form-grid { grid-template-columns: 1fr; }
+      .stats-grid, .form-grid, .provider-grid, .auth-fields { grid-template-columns: 1fr; }
       .food-row { grid-template-columns: auto 1fr; }
       .food-row .status-badge { grid-column: 2; width: fit-content; }
-      .fridge-stage { padding: 14px; min-height: 620px; }
-      .fridge-wrap { height: 590px; }
-      .fridge-inside { grid-template-rows: 106px 132px 132px 116px; }
+      .fridge-stage {
+        padding: 14px 6px 14px 42px;
+        min-height: 610px;
+      }
+      .fridge-wrap {
+        width: min(100%, 338px);
+        height: 560px;
+      }
+      .fridge-wrap.open .fridge-door {
+        transform: rotateY(-92deg) translateX(-2px);
+      }
+      .door-handle {
+        right: 18px;
+        top: 92px;
+        width: 14px;
+        height: 168px;
+      }
+      .door-sticker {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .tap-hint { font-size: 12px; }
+      .fridge-smile { font-size: 56px; }
+      .door-bins {
+        grid-template-rows: 48px 92px 84px 48px 48px;
+        gap: 10px;
+      }
+      .fridge-inside {
+        inset: 16px 18px 20px;
+        grid-template-rows: 86px 66px 108px 96px 86px;
+        gap: 10px;
+      }
+      .compartment, .door-pocket.compartment { padding-top: 34px; }
+      .compartment-label { font-size: 11px; }
+      .fridge-item {
+        max-width: 100%;
+        font-size: 12px;
+        padding: 7px 9px;
+      }
       .message { max-width: 96%; }
       .chat-input-area { grid-template-columns: 1fr; }
+      .modal-card { padding: 20px; }
+    }
+
+    @media (max-width: 420px) {
+      .app-shell { width: calc(100% - 10px); }
+      .fridge-stage {
+        padding: 12px 4px 12px 34px;
+        min-height: 580px;
+      }
+      .fridge-wrap {
+        width: min(100%, 310px);
+        height: 525px;
+      }
+      .fridge-wrap.open .fridge-door {
+        transform: rotateY(-86deg) translateX(0);
+      }
+      .fridge-inside {
+        inset: 14px 14px 18px;
+        grid-template-rows: 78px 60px 96px 88px 80px;
+        gap: 8px;
+      }
+      .hero-card, .panel { padding: 16px; }
+      .brand-title { font-size: 15px; }
+      .brand-subtitle { font-size: 11px; }
+      .primary-btn, .ghost-btn, .danger-btn { padding: 11px 14px; }
     }
   </style>
 </head>
@@ -1156,6 +1364,7 @@
       </nav>
 
       <div class="quick-actions">
+        <button class="ghost-btn account-btn" id="openAccountBtn" type="button">👤 내 계정</button>
         <button class="primary-btn" id="openAddBtn" type="button">+ 재료 추가</button>
       </div>
     </header>
@@ -1350,8 +1559,11 @@
                       <option value="기타">기타</option>
                     </select>
                   </label>
-                  <label>유통기한
-                    <input id="foodExpiry" type="date" required />
+                  <label>냉장고에 넣은 날짜
+                    <input id="foodStoredDate" type="date" />
+                  </label>
+                  <label>유통기한 (선택)
+                    <input id="foodExpiry" type="date" />
                   </label>
                   <label>위치
                     <select id="foodLocation">
@@ -1427,8 +1639,11 @@
               <option value="기타">기타</option>
             </select>
           </label>
-          <label>유통기한
-            <input id="editExpiry" type="date" required />
+          <label>냉장고에 넣은 날짜
+            <input id="editStoredDate" type="date" />
+          </label>
+          <label>유통기한 (선택)
+            <input id="editExpiry" type="date" />
           </label>
           <label>냉장고 위치
             <select id="editLocation">
@@ -1450,14 +1665,105 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="signupModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="signupTitle">잠시만요!</h2>
+          <div class="muted" id="signupSubtitle">회원가입을 하지 않아 기록 저장이 되지 않을 수 있어요.</div>
+        </div>
+        <button class="close-btn" id="closeSignupBtn" type="button">×</button>
+      </div>
+      <p class="signup-copy" id="signupMessage">회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.</p>
+      <div class="auth-fields">
+        <label>이메일
+          <input id="signupEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+        </label>
+        <label>비밀번호
+          <input id="signupPassword" type="password" placeholder="6자 이상" autocomplete="new-password" />
+        </label>
+      </div>
+      <div class="provider-grid provider-only-actions" aria-label="회원가입 경로 선택">
+        <button class="provider-btn google" type="button" data-provider="Google">🔎 Google로 가입</button>
+        <button class="provider-btn naver" type="button" data-provider="Naver">N Naver로 가입</button>
+        <button class="provider-btn kakao" type="button" data-provider="Kakao">💬 Kakao로 가입</button>
+      </div>
+      <div class="form-actions">
+        <button class="ghost-btn" id="skipSignupBtn" type="button">나중에 할게요</button>
+      </div>
+      <div class="signup-note">현재 파일은 정적 데모라 이메일·비밀번호와 가입 경로를 브라우저에 저장해 연동 상태를 시뮬레이션합니다. 실제 서비스에서는 각 제공자의 OAuth와 서버 인증이 필요합니다.</div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="accountModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>내 계정</h2>
+          <div class="muted">닉네임과 회원가입 정보를 확인할 수 있어요.</div>
+        </div>
+        <button class="close-btn" id="closeAccountBtn" type="button">×</button>
+      </div>
+      <form id="accountForm">
+        <label>닉네임
+          <input id="accountNickname" type="text" maxlength="20" />
+        </label>
+        <div class="account-summary">
+          <div class="account-row">
+            <span class="account-label">현재 상태</span>
+            <span class="account-value" id="accountStatus">게스트</span>
+          </div>
+          <div class="account-row">
+            <span class="account-label">회원가입 경로</span>
+            <span class="account-value" id="accountProvider">미가입</span>
+          </div>
+          <div class="account-row">
+            <span class="account-label">이메일</span>
+            <span class="account-value" id="accountEmail">미등록</span>
+          </div>
+          <div class="account-row">
+            <span class="account-label">가입일</span>
+            <span class="account-value" id="accountJoinedAt">미가입</span>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="danger-btn" id="withdrawAccountBtn" type="button">회원 탈퇴</button>
+        </div>
+        <div class="account-help" id="accountHelp">닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.</div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="withdrawConfirmModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>회원 탈퇴</h2>
+          <div class="muted">계정 정보를 삭제하고 게스트 상태로 전환합니다.</div>
+        </div>
+        <button class="close-btn" id="closeWithdrawConfirmBtn" type="button">×</button>
+      </div>
+      <p class="signup-copy">회원 탈퇴를 진행하면 닉네임, 이메일, 회원가입 경로, 가입일 정보가 초기화됩니다. 냉장고에 등록한 재료는 이 브라우저의 로컬 저장소에 그대로 남겨둡니다.</p>
+      <div class="form-actions">
+        <button class="danger-btn" id="confirmWithdrawBtn" type="button">탈퇴하기</button>
+        <button class="ghost-btn" id="cancelWithdrawBtn" type="button">취소</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
-    const STORAGE_KEY = "fridge-survival-tabs-v3";
+    const STORAGE_KEY = "fridge-survival-tabs-v4";
+    const AUTH_KEY = "fridge-survival-auth-v1";
+    const SIGNUP_NUDGE_KEY = "fridge-survival-signup-nudge-v1";
     let foods = loadFoods();
+    let authState = loadAuthState();
     let currentView = "home";
     let currentListFilter = "all";
     let draggedId = null;
+    let pendingView = null;
+    let signupNudgeShown = sessionStorage.getItem(SIGNUP_NUDGE_KEY) === "1";
 
     const tabs = document.querySelectorAll(".tab-btn");
     const views = {
@@ -1474,6 +1780,9 @@
     const chatForm = document.getElementById("chatForm");
     const messages = document.getElementById("messages");
     const editModal = document.getElementById("editModal");
+    const signupModal = document.getElementById("signupModal");
+    const accountModal = document.getElementById("accountModal");
+    const withdrawConfirmModal = document.getElementById("withdrawConfirmModal");
     const toast = document.getElementById("toast");
 
     const locationNames = {
@@ -1499,6 +1808,13 @@
     const eggKeywords = ["계란", "달걀", "egg"];
     const doorKeywords = ["물", "주스", "음료", "탄산", "콜라", "사이다", "우유", "소스", "간장", "고추장", "된장", "케첩", "마요", "드레싱", "잼"];
 
+
+    foods = foods.map(food => ({
+      ...food,
+      storedDate: food.storedDate || (food.createdAt ? String(food.createdAt).slice(0, 10) : todayValue()),
+      expiryDate: food.expiryDate || ""
+    }));
+
     function resolveAutoLocation(name, category) {
       const lower = (name || "").toLowerCase();
       if (eggKeywords.some(word => lower.includes(word))) return "egg";
@@ -1514,6 +1830,69 @@
       const d = new Date();
       d.setDate(d.getDate() + days);
       return d.toISOString().slice(0, 10);
+    }
+
+    function todayValue() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function loadAuthState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(AUTH_KEY));
+        return saved ? {
+          registered: Boolean(saved.registered),
+          provider: saved.provider || null,
+          joinedAt: saved.joinedAt || null,
+          nickname: saved.nickname || "",
+          email: saved.email || ""
+        } : { registered: false, provider: null, joinedAt: null, nickname: "", email: "" };
+      } catch (error) {
+        return { registered: false, provider: null, joinedAt: null, nickname: "", email: "" };
+      }
+    }
+
+    function saveAuthState() {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(authState));
+    }
+
+    function hasNickname() {
+      return Boolean(authState?.nickname && authState.nickname.trim());
+    }
+
+    function getNickname() {
+      return hasNickname() ? authState.nickname.trim() : "";
+    }
+
+    function getCallName() {
+      return hasNickname() ? `${getNickname()}님` : "";
+    }
+
+    function getAccountLabel() {
+      return hasNickname() ? getNickname() : (isGuestUser() ? "게스트" : "회원");
+    }
+
+    function buildWelcomeMessage() {
+      const callName = getCallName();
+      return `${callName ? `${callName}, ` : ""}안녕하세요. 냉장고 재료를 기준으로 메뉴를 추천해드릴게요. 예: ‘지금 내 냉장고에 있는 음식으로 아침 메뉴 추천해줘’`;
+    }
+
+    function isGuestUser() {
+      return !authState || !authState.registered;
+    }
+
+    function formatDateLabel(value) {
+      return value || "미입력";
+    }
+
+    function markSignupPromptShown() {
+      signupNudgeShown = true;
+      sessionStorage.setItem(SIGNUP_NUDGE_KEY, "1");
+    }
+
+    function resetAddFoodForm() {
+      addFoodForm.reset();
+      document.getElementById("foodStoredDate").value = todayValue();
+      document.getElementById("foodLocation").value = "auto";
     }
 
     function loadFoods() {
@@ -1543,14 +1922,17 @@
     }
 
     function getDaysLeft(expiryDate) {
+      if (!expiryDate) return null;
       const today = new Date();
       const target = new Date(expiryDate + "T00:00:00");
+      if (Number.isNaN(target.getTime())) return null;
       today.setHours(0, 0, 0, 0);
       return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
 
     function getStatus(food) {
       const days = getDaysLeft(food.expiryDate);
+      if (days === null) return { key: "unknown", label: "기한 미입력", className: "unknown", badge: "status-neutral", icon: "📝" };
       if (days < 0) return { key: "expired", label: `${Math.abs(days)}일 지남`, className: "expired", badge: "status-expired", icon: "🧟" };
       if (days === 0) return { key: "today", label: "오늘까지", className: "today", badge: "status-today", icon: "🚨" };
       if (days <= 3) return { key: "soon", label: `${days}일 남음`, className: "soon", badge: "status-soon", icon: "⏰" };
@@ -1567,7 +1949,11 @@
     }
 
     function sortByUrgency(list) {
-      return [...list].sort((a, b) => getDaysLeft(a.expiryDate) - getDaysLeft(b.expiryDate));
+      const score = (food) => {
+        const days = getDaysLeft(food.expiryDate);
+        return days === null ? Number.POSITIVE_INFINITY : days;
+      };
+      return [...list].sort((a, b) => score(a) - score(b));
     }
 
     function getEmoji(food) {
@@ -1600,19 +1986,24 @@
 
     function getTip(food) {
       const days = getDaysLeft(food.expiryDate);
+      if (days === null) return `유통기한이 비어 있어요. 넣은 날짜(${formatDateLabel(food.storedDate)})를 기준으로 필요하면 나중에 추가해 주세요.`;
       if (days < 0) return "상태 확인 후 버릴지 결정하세요. 냉장고가 이미 힌트를 주는 중.";
       if (days === 0) return "오늘 안에 먹는 것을 추천합니다. 내일의 나는 믿지 않는 편이 안전합니다.";
       if (days <= 3) return "우선 소비 후보입니다. 메뉴 추천에서도 먼저 반영됩니다.";
       return "아직 여유가 있습니다. 단, 존재 자체를 잊으면 곧 드라마가 시작됩니다.";
     }
 
-    function setView(view) {
+    function setView(view, force = false) {
+      if (!force && currentView === "fridge" && view !== "fridge" && foods.length && isGuestUser() && !signupNudgeShown) {
+        markSignupPromptShown();
+        openSignupModal(view);
+        return;
+      }
       currentView = view;
       tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.view === view));
       Object.entries(views).forEach(([key, el]) => el.classList.toggle("active", key === view));
       const introHero = document.getElementById("introHero");
       if (introHero) introHero.style.display = view === "home" ? "grid" : "none";
-      if (view === "fridge" && foods.length) setTimeout(() => fridgeWrap.classList.add("open"), 180);
       render();
     }
 
@@ -1623,6 +2014,153 @@
       openToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
     }
 
+
+    function openSignupModal(nextView, reason = "default") {
+      pendingView = nextView;
+      if (accountModal) accountModal.classList.remove("open");
+      if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
+      const emailInput = document.getElementById("signupEmail");
+      const passwordInput = document.getElementById("signupPassword");
+      const titleEl = document.getElementById("signupTitle");
+      const subtitleEl = document.getElementById("signupSubtitle");
+      const messageEl = document.getElementById("signupMessage");
+
+      if (reason === "withdrawn") {
+        if (titleEl) titleEl.textContent = "다시 가입하시겠어요?";
+        if (subtitleEl) subtitleEl.textContent = "회원 탈퇴가 완료되어 현재는 게스트 상태예요.";
+        if (messageEl) messageEl.textContent = "기록을 안정적으로 저장하려면 Google·Naver·Kakao 중 하나로 다시 가입해 주세요.";
+      } else {
+        if (titleEl) titleEl.textContent = "잠시만요!";
+        if (subtitleEl) subtitleEl.textContent = "회원가입을 하지 않아 기록 저장이 되지 않을 수 있어요.";
+        if (messageEl) messageEl.textContent = "회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.";
+      }
+
+      if (emailInput) emailInput.value = authState.email || "";
+      if (passwordInput) passwordInput.value = "";
+      signupModal.classList.add("open");
+    }
+
+    function closeSignupModal(continueNavigation = false) {
+      signupModal.classList.remove("open");
+      const targetView = pendingView;
+      pendingView = null;
+      if (continueNavigation && targetView) {
+        setView(targetView, true);
+      }
+    }
+
+    function completeSignup(provider) {
+      const emailInput = document.getElementById("signupEmail");
+      const passwordInput = document.getElementById("signupPassword");
+      const email = emailInput ? emailInput.value.trim() : "";
+      const password = passwordInput ? passwordInput.value : "";
+
+      if (!email || !email.includes("@")) {
+        openToast("이메일을 입력해 주세요");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      if (!password || password.length < 6) {
+        openToast("비밀번호는 6자 이상 입력해 주세요");
+        if (passwordInput) passwordInput.focus();
+        return;
+      }
+
+      authState = {
+        ...authState,
+        registered: true,
+        provider,
+        email,
+        joinedAt: authState.joinedAt || new Date().toISOString(),
+        nickname: authState.nickname || ""
+      };
+      saveAuthState();
+      renderAccountUI();
+      closeSignupModal(true);
+      openToast(`${provider} 계정 연결 완료`);
+      if (emailInput) emailInput.value = "";
+      if (passwordInput) passwordInput.value = "";
+    }
+
+    function renderAccountUI() {
+      const openAccountBtn = document.getElementById("openAccountBtn");
+      if (openAccountBtn) openAccountBtn.textContent = `👤 ${getAccountLabel()}`;
+      const statusEl = document.getElementById("accountStatus");
+      const providerEl = document.getElementById("accountProvider");
+      const emailEl = document.getElementById("accountEmail");
+      const joinedAtEl = document.getElementById("accountJoinedAt");
+      const helpEl = document.getElementById("accountHelp");
+      const nicknameInput = document.getElementById("accountNickname");
+      const withdrawBtn = document.getElementById("withdrawAccountBtn");
+      if (nicknameInput) nicknameInput.value = getNickname();
+      if (statusEl) statusEl.textContent = isGuestUser() ? "게스트" : "회원";
+      if (providerEl) providerEl.textContent = authState.provider || "미가입";
+      if (emailEl) emailEl.textContent = authState.email || "미등록";
+      if (joinedAtEl) joinedAtEl.textContent = authState.joinedAt ? String(authState.joinedAt).slice(0, 10) : "미가입";
+      if (helpEl) helpEl.textContent = hasNickname()
+        ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
+        : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
+      if (withdrawBtn) {
+        withdrawBtn.disabled = isGuestUser();
+        withdrawBtn.style.opacity = isGuestUser() ? "0.55" : "";
+        withdrawBtn.textContent = isGuestUser() ? "가입 안내 보기" : "회원 탈퇴";
+      }
+    }
+
+    function openAccountModal() {
+      renderAccountUI();
+      accountModal.classList.add("open");
+    }
+
+    function closeAccountModal() {
+      accountModal.classList.remove("open");
+    }
+
+    function saveNicknameFromAccountInput(showToast = false) {
+      const nickname = document.getElementById("accountNickname").value.trim();
+      authState = {
+        ...authState,
+        nickname
+      };
+      saveAuthState();
+      renderAccountUI();
+      if (showToast) openToast(nickname ? `${nickname} 닉네임 저장 완료` : "닉네임 없이 저장 완료");
+    }
+
+    function withdrawAccount() {
+      if (isGuestUser()) {
+        openSignupModal(currentView, "withdrawn");
+        return;
+      }
+      openWithdrawConfirmModal();
+    }
+
+    function openWithdrawConfirmModal() {
+      withdrawConfirmModal.classList.add("open");
+    }
+
+    function closeWithdrawConfirmModal() {
+      withdrawConfirmModal.classList.remove("open");
+    }
+
+    function completeWithdrawAccount() {
+      authState = {
+        registered: false,
+        provider: null,
+        email: null,
+        joinedAt: null,
+        nickname: ""
+      };
+      saveAuthState();
+      sessionStorage.removeItem(SIGNUP_NUDGE_KEY);
+      signupNudgeShown = false;
+      if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
+      if (accountModal) accountModal.classList.remove("open");
+      renderAccountUI();
+      openToast("회원 탈퇴 완료");
+      setTimeout(() => openSignupModal(currentView, "withdrawn"), 120);
+    }
+
     function foodRowTemplate(food) {
       const status = getStatus(food);
       return `
@@ -1630,7 +2168,7 @@
           <div class="food-icon">${getEmoji(food)}</div>
           <div>
             <div class="food-name">${escapeHtml(food.name)}</div>
-            <div class="food-meta">${escapeHtml(food.category)} · ${locationNames[food.location] || "미지정"} · ${food.expiryDate}<br>${getTip(food)}</div>
+            <div class="food-meta">${escapeHtml(food.category)} · ${locationNames[food.location] || "미지정"} · 넣은 날짜 ${formatDateLabel(food.storedDate)} · 유통기한 ${formatDateLabel(food.expiryDate)}<br>${getTip(food)}</div>
           </div>
           <span class="status-badge ${status.badge}">${status.icon} ${status.label}</span>
         </article>
@@ -1720,6 +2258,7 @@
 
     function renderIngredientCloud() {
       const cloud = document.getElementById("ingredientCloud");
+      if (!cloud) return;
       if (!foods.length) {
         cloud.innerHTML = `<div class="empty-box">재료를 추가하면 채팅이 더 똑똑해집니다.</div>`;
         return;
@@ -1735,6 +2274,7 @@
       renderHomeList();
       renderRescueRecipes();
       renderFridgeItems();
+      renderIngredientCloud();
       bindFoodRows();
     }
 
@@ -1751,14 +2291,15 @@
       event.preventDefault();
       const name = document.getElementById("foodName").value.trim();
       const category = document.getElementById("foodCategory").value;
-      const expiryDate = document.getElementById("foodExpiry").value;
+      const storedDate = document.getElementById("foodStoredDate").value || todayValue();
+      const expiryDate = document.getElementById("foodExpiry").value || "";
       const selectedLocation = document.getElementById("foodLocation").value;
-      if (!name || !category || !expiryDate) return;
+      if (!name || !category) return;
 
       const location = selectedLocation === "auto" ? resolveAutoLocation(name, category) : selectedLocation;
-      foods.push({ id: uid(), name, category, expiryDate, location, createdAt: new Date().toISOString() });
+      foods.push({ id: uid(), name, category, storedDate, expiryDate, location, createdAt: new Date().toISOString() });
       saveFoods();
-      addFoodForm.reset();
+      resetAddFoodForm();
       fridgeWrap.classList.add("open");
       render();
       openToast(`${name} 냉장고 입성 완료`);
@@ -1770,7 +2311,8 @@
       document.getElementById("editId").value = food.id;
       document.getElementById("editName").value = food.name;
       document.getElementById("editCategory").value = food.category;
-      document.getElementById("editExpiry").value = food.expiryDate;
+      document.getElementById("editStoredDate").value = food.storedDate || "";
+      document.getElementById("editExpiry").value = food.expiryDate || "";
       document.getElementById("editLocation").value = food.location;
       document.getElementById("editTitle").textContent = `${getEmoji(food)} ${food.name}`;
       document.getElementById("editSubtitle").textContent = `${getStatus(food).label} · ${getTip(food)}`;
@@ -1788,7 +2330,8 @@
       if (!food) return;
       food.name = document.getElementById("editName").value.trim();
       food.category = document.getElementById("editCategory").value;
-      food.expiryDate = document.getElementById("editExpiry").value;
+      food.storedDate = document.getElementById("editStoredDate").value || todayValue();
+      food.expiryDate = document.getElementById("editExpiry").value || "";
       food.location = document.getElementById("editLocation").value;
       saveFoods();
       render();
@@ -1832,7 +2375,8 @@
         id: `user-${name}`,
         name,
         category: guessCategoryByName(name),
-        expiryDate: todayPlus(7),
+        expiryDate: "",
+        storedDate: todayValue(),
         location: resolveAutoLocation(name, guessCategoryByName(name)),
         createdAt: new Date().toISOString(),
         isUserProvided: true
@@ -1843,7 +2387,7 @@
       const available = sortByUrgency(sourceFoods.length ? sourceFoods : foods);
       const names = available.map(f => f.name);
       const userProvided = available.some(f => f.isUserProvided);
-      const urgent = available.filter(f => !f.isUserProvided && getDaysLeft(f.expiryDate) <= 3).map(f => f.name);
+      const urgent = available.filter(f => !f.isUserProvided && typeof getDaysLeft(f.expiryDate) === "number" && getDaysLeft(f.expiryDate) <= 3).map(f => f.name);
       const has = keyword => names.some(name => name.includes(keyword));
       const categoryHas = category => available.some(f => f.category === category);
       const pick = (index, fallback = "남은 재료") => names[index] || fallback;
@@ -1997,17 +2541,18 @@
 
     function botReply(userText) {
       const text = userText.trim();
+      const callName = getCallName();
 
       if (isGreeting(text)) {
-        return "안녕하세요. 냉장고 재료로 메뉴를 추천해드릴게요. 재료나 식사 시간을 말해 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.";
+        return `${callName ? `${callName}, ` : ""}안녕하세요. 냉장고 재료로 메뉴를 추천해드릴게요. 재료나 식사 시간을 말해 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.`;
       }
 
       if (isThanks(text)) {
-        return "천만에요. 다른 재료나 식사 시간을 말해주면 이어서 추천해드릴게요.";
+        return `${callName ? `${callName}, ` : ""}천만에요. 다른 재료나 식사 시간을 말해주면 이어서 추천해드릴게요.`;
       }
 
       if (isCasualOrComplaint(text)) {
-        return "앗, 방금 말은 메뉴 요청으로 이해하지 않을게요. 메뉴 추천이 필요하면 ‘계란이랑 양파로 아침 만들어줘’처럼 재료와 식사 시간을 같이 말해 주세요.";
+        return `${callName ? `${callName}, ` : ""}앗, 방금 말은 메뉴 요청으로 이해하지 않을게요. 메뉴 추천이 필요하면 ‘계란이랑 양파로 아침 만들어줘’처럼 재료와 식사 시간을 같이 말해 주세요.`;
       }
 
       const menuIntent = isMenuIntent(text);
@@ -2022,17 +2567,17 @@
       if (!menuIntent) {
         if (requestedFoods.length) {
           chatMemory.lastFoods = requestedFoods;
-          return `${requestedFoods.map(f => `${getEmoji(f)} ${f.name}`).join(", ")} 재료를 말해주신 걸로 이해했어요. 아침·점심·저녁 중 어떤 메뉴로 추천할까요?`;
+          return `${callName ? `${callName}, ` : ""}${requestedFoods.map(f => `${getEmoji(f)} ${f.name}`).join(", ")} 재료를 말해주신 걸로 이해했어요. 아침·점심·저녁 중 어떤 메뉴로 추천할까요?`;
         }
-        return "아직 메뉴 요청으로 이해하지 않았어요. ‘아침 추천해줘’, ‘계란이랑 김치로 뭐 만들까?’처럼 말해주면 그 요청에 맞춰 답할게요.";
+        return `${callName ? `${callName}, ` : ""}아직 메뉴 요청으로 이해하지 않았어요. ‘아침 추천해줘’, ‘계란이랑 김치로 뭐 만들까?’처럼 말해주면 그 요청에 맞춰 답할게요.`;
       }
 
       if (!foods.length && !requestedFoods.length && !chatMemory.lastFoods.length) {
-        return "아직 냉장고에 등록된 재료가 없어요. 재료를 먼저 넣거나, 채팅창에 직접 재료명을 적어주세요. 예: ‘계란, 양파로 아침 만들어줘’.";
+        return `${callName ? `${callName}, ` : ""}아직 냉장고에 등록된 재료가 없어요. 재료를 먼저 넣거나, 채팅창에 직접 재료명을 적어주세요. 예: ‘계란, 양파로 아침 만들어줘’.`;
       }
 
       const meal = detectMeal(text);
-      const urgent = sortByUrgency(foods.filter(f => getDaysLeft(f.expiryDate) <= 3));
+      const urgent = sortByUrgency(foods.filter(f => typeof getDaysLeft(f.expiryDate) === "number" && getDaysLeft(f.expiryDate) <= 3));
       const wantsUrgent = text.includes("임박") || text.includes("유통기한") || text.includes("빨리") || text.includes("버리") || text.includes("상할");
       const wantsPrevious = /(그걸로|그거로|그 재료|아까|방금|이걸로|이거로)/.test(text) && chatMemory.lastFoods.length;
       const useSource = requestedFoods.length
@@ -2044,7 +2589,7 @@
             : foods;
 
       if (!useSource.length) {
-        return "추천에 쓸 재료를 찾지 못했어요. 실제 재료명을 넣어 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.";
+        return `${callName ? `${callName}, ` : ""}추천에 쓸 재료를 찾지 못했어요. 실제 재료명을 넣어 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.`;
       }
 
       chatMemory.lastFoods = useSource;
@@ -2138,15 +2683,38 @@
       if (event.target === editModal) closeEditModal();
     });
 
-    chatForm.addEventListener("submit", handleChat);
-    document.querySelectorAll("[data-prompt]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.getElementById("chatInput").value = btn.dataset.prompt;
-        chatForm.requestSubmit();
-      });
+    document.getElementById("closeSignupBtn").addEventListener("click", () => closeSignupModal(true));
+    document.getElementById("skipSignupBtn").addEventListener("click", () => closeSignupModal(true));
+    signupModal.addEventListener("click", (event) => {
+      if (event.target === signupModal) closeSignupModal(true);
+    });
+    document.querySelectorAll("[data-provider]").forEach(btn => {
+      btn.addEventListener("click", () => completeSignup(btn.dataset.provider));
     });
 
-    addMessage("bot", "안녕하세요. 냉장고 재료를 기준으로 메뉴를 추천해드릴게요. 예: ‘지금 내 냉장고에 있는 음식으로 아침 메뉴 추천해줘’");
+    document.getElementById("openAccountBtn").addEventListener("click", openAccountModal);
+    document.getElementById("closeAccountBtn").addEventListener("click", closeAccountModal);
+    accountModal.addEventListener("click", (event) => {
+      if (event.target === accountModal) closeAccountModal();
+    });
+    document.getElementById("accountNickname").addEventListener("input", () => saveNicknameFromAccountInput(false));
+    document.getElementById("accountNickname").addEventListener("blur", () => saveNicknameFromAccountInput(false));
+    document.getElementById("accountForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveNicknameFromAccountInput(false);
+    });
+    document.getElementById("withdrawAccountBtn").addEventListener("click", withdrawAccount);
+    document.getElementById("confirmWithdrawBtn").addEventListener("click", completeWithdrawAccount);
+    document.getElementById("cancelWithdrawBtn").addEventListener("click", closeWithdrawConfirmModal);
+    document.getElementById("closeWithdrawConfirmBtn").addEventListener("click", closeWithdrawConfirmModal);
+    withdrawConfirmModal.addEventListener("click", (event) => {
+      if (event.target === withdrawConfirmModal) closeWithdrawConfirmModal();
+    });
+
+    chatForm.addEventListener("submit", handleChat);
+    resetAddFoodForm();
+    renderAccountUI();
+    addMessage("bot", buildWelcomeMessage());
     render();
   </script>
 </body>
