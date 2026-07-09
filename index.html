@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>냉장고 생존기 — Fridge Planner</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --bg-2: #f6fbff;
+      --ink: #24313d;
+      --muted: #72808e;
+      --line: rgba(36, 49, 61, 0.12);
+      --card: rgba(255, 255, 255, 0.82);
+      --accent: #ff7a59;
+      --accent-2: #35b9a5;
+      --accent-3: #7c6cff;
+      --danger: #ea5455;
+      --warning: #f7b731;
+      --fresh: #38b000;
+      --shadow: 0 18px 60px rgba(58, 45, 32, 0.14);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255, 196, 87, 0.35), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(89, 212, 191, 0.32), transparent 26%),
+        radial-gradient(circle at 52% 95%, rgba(124, 108, 255, 0.20), transparent 32%),
+        linear-gradient(135deg, var(--bg), var(--bg-2));
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.64);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 10px 40px rgba(54, 44, 36, 0.08);
+      position: sticky;
+      top: 14px;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 210px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #ff986e, #ffd166);
+      box-shadow: inset 0 -8px 16px rgba(0, 0, 0, 0.08);
+      font-size: 23px;
+    }
+
+    .brand-title {
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      transition: 0.22s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: white;
+      background: linear-gradient(135deg, #293241, #3d5a80);
+      box-shadow: 0 12px 24px rgba(61, 90, 128, 0.24);
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .primary-btn, .ghost-btn, .danger-btn {
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 900;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .primary-btn {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #ffb703);
+      box-shadow: 0 16px 32px rgba(255, 122, 89, 0.24);
+    }
+
+    .ghost-btn {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+    }
+
+    .danger-btn {
+      color: white;
+      background: linear-gradient(135deg, #ff5f6d, #c9184a);
+    }
+
+    .primary-btn:hover, .ghost-btn:hover, .danger-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      margin: 28px 0 24px;
+      align-items: stretch;
+    }
+
+    .hero-card, .panel, .stat-card, .modal-card {
+      border: 1px solid var(--line);
+      background: var(--card);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 34px;
+      overflow: hidden;
+      position: relative;
+      min-height: 300px;
+    }
+
+    .hero > .hero-card:first-child {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      border-radius: 999px;
+      background: rgba(255, 122, 89, 0.13);
+      right: -80px;
+      top: -80px;
+    }
+
+    h1 {
+      margin: 0 auto;
+      font-size: clamp(20px, 2vw, 30px);
+      line-height: 1.18;
+      letter-spacing: -0.045em;
+      max-width: 100%;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .hero-copy {
+      color: var(--muted);
+      line-height: 1.75;
+      margin: 18px auto 24px;
+      max-width: 620px;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: #415060;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .side-kpi {
+      padding: 26px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid var(--line);
+    }
+
+    .kpi-bubble {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      border-radius: 26px;
+      font-size: 30px;
+      background: linear-gradient(145deg, rgba(53, 185, 165, 0.22), rgba(124, 108, 255, 0.18));
+    }
+
+    .kpi-title {
+      font-weight: 900;
+      font-size: 18px;
+      margin-bottom: 5px;
+      letter-spacing: -0.03em;
+    }
+
+    .kpi-text {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .view {
+      display: none;
+      animation: rise 0.25s ease both;
+    }
+
+    .view.active { display: block; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      text-align: left;
+      transition: 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 148px;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 64px rgba(58, 45, 32, 0.18);
+    }
+
+    .stat-card::after {
+      content: attr(data-icon);
+      position: absolute;
+      right: 12px;
+      bottom: -6px;
+      font-size: 64px;
+      opacity: 0.18;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .stat-value {
+      font-size: 40px;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .panel {
+      padding: 24px;
+      min-height: 200px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: -0.04em;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .filter-pillbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .pill.active {
+      color: white;
+      background: #293241;
+    }
+
+    .food-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .food-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .food-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      font-size: 25px;
+      position: relative;
+    }
+
+    .food-name {
+      font-weight: 950;
+      letter-spacing: -0.03em;
+    }
+
+    .food-meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .status-safe { background: rgba(56, 176, 0, 0.12); color: #2f8500; }
+    .status-soon { background: rgba(247, 183, 49, 0.16); color: #9c6400; }
+    .status-today { background: rgba(255, 122, 89, 0.16); color: #c95d18; }
+    .status-expired { background: rgba(234, 84, 85, 0.14); color: #bc1f34; }
+
+    .empty-box {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.65;
+      border: 1px dashed rgba(36, 49, 61, 0.2);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.38);
+      padding: 24px;
+    }
+
+    .recipe-card {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+
+    .recipe-title {
+      font-weight: 950;
+      letter-spacing: -0.03em;
+      margin-bottom: 7px;
+    }
+
+    .recipe-text {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .fridge-layout {
+      display: grid;
+      grid-template-columns: minmax(330px, 470px) 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .fridge-stage {
+      min-height: 760px;
+      display: grid;
+      place-items: center;
+      perspective: 1200px;
+      padding: 26px;
+    }
+
+    .fridge-wrap {
+      width: min(460px, 100%);
+      height: 740px;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    .fridge-body {
+      position: absolute;
+      inset: 0;
+      border-radius: 48px 48px 36px 36px;
+      background: linear-gradient(180deg, #fdfefe, #f4fbff 52%, #e6f4fb);
+      border: 1px solid rgba(163, 191, 205, 0.7);
+      box-shadow:
+        0 34px 70px rgba(66, 93, 111, 0.18),
+        inset 0 0 0 12px rgba(225, 241, 248, 0.9);
+      overflow: hidden;
+    }
+
+    .fridge-body::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 36px 36px 28px 28px;
+      border: 2px solid rgba(212, 231, 240, 0.95);
+      pointer-events: none;
+    }
+
+    .fridge-body::after {
+      content: "";
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 148px;
+      height: 2px;
+      background: rgba(188, 212, 224, 0.95);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.85);
+      pointer-events: none;
+    }
+
+    .fridge-door {
+      position: absolute;
+      inset: 0;
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease;
+      border-radius: 48px 48px 36px 36px;
+      z-index: 8;
+      cursor: pointer;
+      transform-style: preserve-3d;
+    }
+
+    .fridge-wrap.open .fridge-door {
+      transform: rotateY(-112deg) translateX(-8px);
+      box-shadow: 16px 28px 60px rgba(66, 93, 111, 0.15);
+    }
+
+    .door-front,
+    .door-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: inherit;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+
+    .door-front {
+      background:
+        linear-gradient(110deg, rgba(255,255,255,0.78), transparent 27%),
+        linear-gradient(180deg, #f8feff, #e9f5fb 48%, #d6ebf5);
+      border: 1px solid rgba(163, 191, 205, 0.75);
+      box-shadow: 0 34px 70px rgba(66, 93, 111, 0.18), inset -14px 0 28px rgba(76, 134, 158, 0.1);
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+      place-items: center;
+      padding: 36px 34px;
+    }
+
+    .door-front::before,
+    .door-front::after {
+      content: "";
+      position: absolute;
+      background: rgba(190, 214, 225, 0.85);
+      pointer-events: none;
+    }
+
+    .door-front::before {
+      left: 18px;
+      right: 18px;
+      bottom: 146px;
+      height: 2px;
+    }
+
+    .door-front::after {
+      top: 18px;
+      bottom: 146px;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-1px);
+    }
+
+    .door-inner {
+      transform: rotateY(180deg);
+      background: linear-gradient(180deg, #fefefe, #f4fbff 62%, #eaf6fb);
+      border: 1px solid rgba(163, 191, 205, 0.65);
+      box-shadow: inset 0 0 0 12px rgba(232, 243, 248, 0.9);
+      padding: 86px 16px 18px;
+    }
+
+    .door-inner::before {
+      content: "";
+      position: absolute;
+      inset: 18px 14px 18px 14px;
+      border-radius: 28px;
+      border: 2px solid rgba(221, 236, 244, 0.95);
+      pointer-events: none;
+    }
+
+    .door-sticker {
+      align-self: end;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      font-weight: 950;
+      box-shadow: 0 10px 26px rgba(44, 64, 84, 0.1);
+      transform: rotate(4deg);
+    }
+
+    .door-handle {
+      position: absolute;
+      right: 26px;
+      top: 116px;
+      width: 18px;
+      height: 210px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #97c6d9, #709fb7);
+      box-shadow: inset 5px 0 8px rgba(255, 255, 255, 0.35);
+      z-index: 3;
+    }
+
+    .fridge-smile {
+      font-size: 72px;
+      filter: drop-shadow(0 12px 18px rgba(41, 50, 65, 0.08));
+    }
+
+    .tap-hint {
+      align-self: start;
+      color: #5f7686;
+      font-weight: 900;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .door-bins {
+      display: grid;
+      grid-template-rows: 64px 120px 108px 64px 64px;
+      gap: 14px;
+      height: 100%;
+      align-content: start;
+    }
+
+    .door-bin {
+      position: relative;
+      height: 92px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(241,249,253,0.9));
+      border: 1px solid rgba(184, 207, 218, 0.9);
+      box-shadow: inset 0 -10px 18px rgba(179, 209, 222, 0.22);
+      overflow: hidden;
+    }
+
+    .door-pocket.compartment {
+      padding: 38px 10px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: flex-start;
+    }
+
+    .door-pocket.compartment::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 18px;
+      border-radius: 10px;
+      border: 2px solid rgba(186, 207, 219, 0.95);
+      background: rgba(255,255,255,0.35);
+      pointer-events: none;
+    }
+
+    .door-bin::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 18px;
+      border-radius: 10px;
+      border: 2px solid rgba(186, 207, 219, 0.95);
+      background: rgba(255,255,255,0.35);
+    }
+
+    .door-bin.small { height: 72px; }
+
+    .door-bin .bottle,
+    .door-bin .jar {
+      position: absolute;
+      bottom: 18px;
+      border-radius: 12px 12px 8px 8px;
+      background: linear-gradient(180deg, rgba(181,215,232,0.85), rgba(132,178,201,0.75));
+      opacity: 0.9;
+    }
+
+    .door-bin .bottle::before,
+    .door-bin .jar::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 42%;
+      height: 12px;
+      border-radius: 6px 6px 0 0;
+      background: rgba(145, 184, 202, 0.95);
+    }
+
+    .door-bin .bottle { width: 18px; height: 46px; }
+    .door-bin .jar { width: 24px; height: 34px; border-radius: 8px; }
+
+    .fridge-inside {
+      position: absolute;
+      inset: 24px 26px 28px;
+      display: grid;
+      grid-template-rows: 112px 88px 138px 126px 116px;
+      gap: 12px;
+      z-index: 3;
+    }
+
+    .compartment {
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(247,252,255,0.88));
+      border: 1px solid rgba(188, 212, 224, 0.95);
+      box-shadow: inset 0 -10px 18px rgba(188, 212, 224, 0.15);
+      overflow: hidden;
+      padding: 38px 12px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px;
+      transition: 0.2s ease;
+    }
+
+    .compartment.compact {
+      padding-top: 34px;
+      border-radius: 20px;
+    }
+
+    .compartment.freezer-drawer {
+      border-radius: 20px 20px 26px 26px;
+      background: linear-gradient(180deg, rgba(248,252,255,0.92), rgba(239,247,252,0.96));
+    }
+
+    .compartment.drag-over {
+      outline: 3px solid rgba(255, 122, 89, 0.55);
+      background: rgba(255, 250, 236, 0.9);
+    }
+
+    .compartment-label {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(188, 212, 224, 0.95);
+      color: #607786;
+      font-weight: 950;
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .compartment::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 8px;
+      border-radius: 0 0 14px 14px;
+      background: linear-gradient(180deg, rgba(182, 209, 221, 0), rgba(182, 209, 221, 0.35));
+      pointer-events: none;
+    }
+
+    .fridge-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 142px;
+      padding: 8px 10px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(36, 49, 61, 0.1);
+      box-shadow: 0 8px 16px rgba(68, 92, 112, 0.09);
+      font-size: 13px;
+      font-weight: 950;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      cursor: grab;
+      transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .fridge-item:hover { transform: translateY(-2px) rotate(-1deg); }
+    .fridge-item:active { cursor: grabbing; }
+
+    .fridge-item.soon {
+      background: #fff2c4;
+      border-color: rgba(247, 183, 49, 0.45);
+      animation: tinyPulse 1.8s ease-in-out infinite;
+    }
+
+    .fridge-item.today {
+      background: #ffe0cf;
+      border-color: rgba(255, 122, 89, 0.48);
+      animation: tinyPulse 1.2s ease-in-out infinite;
+    }
+
+    .fridge-item.expired {
+      background: #dde1da;
+      border-color: rgba(54, 60, 54, 0.22);
+      filter: grayscale(0.55) saturate(0.62);
+      opacity: 0.84;
+      transform: rotate(-2deg);
+    }
+
+    .fridge-item.expired::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 18% 38%, rgba(46, 67, 46, 0.32) 0 3px, transparent 4px),
+        radial-gradient(circle at 77% 22%, rgba(46, 67, 46, 0.25) 0 2px, transparent 3px),
+        radial-gradient(circle at 66% 72%, rgba(46, 67, 46, 0.22) 0 3px, transparent 4px);
+      pointer-events: none;
+    }
+
+    @keyframes tinyPulse {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
+    .fridge-side-panel {
+      display: grid;
+      gap: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--ink);
+      outline: 0;
+      transition: box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(255, 122, 89, 0.5);
+      box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.12);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tiny-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 0.75fr 1.25fr;
+      gap: 18px;
+    }
+
+    .ingredient-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ingredient-chip {
+      display: inline-flex;
+      gap: 6px;
+      padding: 9px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--line);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .chat-box {
+      height: 560px;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .messages {
+      padding: 22px;
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 14px 16px;
+      border-radius: 22px;
+      line-height: 1.65;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .message.bot {
+      justify-self: start;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid var(--line);
+      border-bottom-left-radius: 8px;
+    }
+
+    .message.user {
+      justify-self: end;
+      color: white;
+      background: linear-gradient(135deg, #293241, #3d5a80);
+      border-bottom-right-radius: 8px;
+    }
+
+    .chat-input-area {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.56);
+      border-top: 1px solid var(--line);
+    }
+
+    .quick-prompts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: center;
+      background: rgba(24, 32, 41, 0.38);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal-card {
+      width: min(560px, 100%);
+      padding: 24px;
+      animation: pop 0.2s ease both;
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .close-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      font-weight: 950;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 110;
+      background: #293241;
+      color: white;
+      padding: 13px 16px;
+      border-radius: 999px;
+      font-weight: 900;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 18px 42px rgba(41, 50, 65, 0.24);
+      transition: 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .section-spacer { height: 8px; }
+
+    .fridge-empty-state {
+      width: min(520px, 100%);
+      min-height: 360px;
+      display: none;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.7;
+      padding: 34px;
+      border: 1px dashed rgba(36, 49, 61, 0.2);
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .fridge-empty-state strong {
+      display: block;
+      color: var(--ink);
+      font-size: 22px;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+
+    .fridge-centered {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+
+    .fridge-centered .fridge-stage {
+      width: min(560px, 100%);
+      margin: 0 auto;
+    }
+
+    .fridge-centered .fridge-side-panel {
+      width: min(760px, 100%);
+      margin: 0 auto;
+    }
+
+    .menu-chat-only {
+      grid-template-columns: minmax(320px, 860px);
+      justify-content: center;
+    }
+
+    .menu-chat-only .chat-box {
+      width: 100%;
+    }
+
+    .home-empty-note {
+      margin-top: 16px;
+    }
+
+
+    @media (max-width: 980px) {
+      .hero, .dashboard-grid, .fridge-layout, .chat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        white-space: normal;
+      }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .fridge-stage { min-height: 680px; }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .topbar {
+        border-radius: 26px;
+        flex-direction: column;
+        align-items: stretch;
+        position: static;
+      }
+      .brand { min-width: 0; }
+      .tabs { overflow-x: auto; justify-content: start; }
+      .quick-actions { justify-content: space-between; }
+      .hero-card, .panel { padding: 20px; }
+      .stats-grid, .form-grid { grid-template-columns: 1fr; }
+      .food-row { grid-template-columns: auto 1fr; }
+      .food-row .status-badge { grid-column: 2; width: fit-content; }
+      .fridge-stage { padding: 14px; min-height: 620px; }
+      .fridge-wrap { height: 590px; }
+      .fridge-inside { grid-template-rows: 106px 132px 132px 116px; }
+      .message { max-width: 96%; }
+      .chat-input-area { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">🧊</div>
+        <div>
+          <div class="brand-title">냉장고 생존기</div>
+          <div class="brand-subtitle">오늘 먹을 재료 정리 프로젝트</div>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="메인 탭">
+        <button class="tab-btn active" data-view="home">🏠 홈</button>
+        <button class="tab-btn" data-view="fridge">🧊 냉장고</button>
+        <button class="tab-btn" data-view="menu">🍳 메뉴 추천</button>
+      </nav>
+
+      <div class="quick-actions">
+        <button class="primary-btn" id="openAddBtn" type="button">+ 재료 추가</button>
+      </div>
+    </header>
+
+    <section class="hero" id="introHero">
+      <div class="hero-card">
+        <h1>냉장고 속 재료로 오늘의 메뉴를 찾습니다.</h1>
+        <p class="hero-copy">
+          남은 재료를 가볍게 정리하고, 유통기한이 가까운 것부터 메뉴 추천에 반영하는 작은 냉장고 도우미입니다.
+        </p>
+        <div class="hero-tags">
+          <span class="tag">상태 변화</span>
+          <span class="tag">탭 UI</span>
+          <span class="tag">열리는 냉장고</span>
+          <span class="tag">로컬 저장</span>
+          <span class="tag">메뉴 추천 채팅</span>
+        </div>
+      </div>
+      <aside class="hero-card side-kpi">
+        <div class="kpi-row">
+          <div class="kpi-bubble">🥬</div>
+          <div>
+            <div class="kpi-title">임박 재료 우선</div>
+            <div class="kpi-text">곧 위험해질 재료부터 목록과 추천 메뉴에 반영합니다.</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-bubble">🧽</div>
+          <div>
+            <div class="kpi-title">폐기 후보 표시</div>
+            <div class="kpi-text">기한이 지난 재료는 냉장고 안에서 흐릿하고 상한 느낌으로 변합니다.</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-bubble">🍽️</div>
+          <div>
+            <div class="kpi-title">오늘 뭐 먹지</div>
+            <div class="kpi-text">아침·점심·저녁 요청을 인식해 냉장고 재료 기반으로 답변합니다.</div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <main>
+      <section id="homeView" class="view active">
+        <div class="stats-grid">
+          <button class="stat-card" data-stat-filter="all" data-icon="🧺">
+            <div class="stat-label">전체 식재료</div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-desc">클릭하면 등록한 전체 재료를 봅니다.</div>
+          </button>
+          <button class="stat-card" data-stat-filter="soon" data-icon="⏰">
+            <div class="stat-label">3일 이내 임박</div>
+            <div class="stat-value" id="statSoon">0</div>
+            <div class="stat-desc">오늘 먹거나 요리 우선순위로 올릴 재료입니다.</div>
+          </button>
+          <button class="stat-card" data-stat-filter="expired" data-icon="🧟">
+            <div class="stat-label">이미 만료</div>
+            <div class="stat-value" id="statExpired">0</div>
+            <div class="stat-desc">상태 확인 후 과감한 이별이 필요합니다.</div>
+          </button>
+          <button class="stat-card" data-stat-filter="safe" data-icon="🌿">
+            <div class="stat-label">아직 여유</div>
+            <div class="stat-value" id="statSafe">0</div>
+            <div class="stat-desc">안심 구간이지만 존재를 잊으면 안 됩니다.</div>
+          </button>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-title">
+              <div>
+                <h2 id="homeListTitle">전체 재료</h2>
+                <div class="muted" id="homeListSubtitle">카드를 클릭해서 필터를 바꿔보세요.</div>
+              </div>
+            </div>
+            <div class="filter-pillbar">
+              <button class="pill active" data-list-filter="all">전체</button>
+              <button class="pill" data-list-filter="soon">임박</button>
+              <button class="pill" data-list-filter="expired">폐기 후보</button>
+              <button class="pill" data-list-filter="safe">여유</button>
+            </div>
+            <div class="food-list" id="homeFoodList"></div>
+          </section>
+
+          <aside class="panel">
+            <div class="panel-title">
+              <div>
+                <h2>오늘의 구조 요청</h2>
+                <div class="muted">기한이 가까운 재료로 빠르게 먹을 조합</div>
+              </div>
+            </div>
+            <div id="rescueRecipes"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="fridgeView" class="view">
+        <div class="fridge-layout fridge-centered">
+          <section class="panel fridge-stage">
+            <div class="fridge-empty-state" id="fridgeEmptyState">
+              <div>
+                <strong>아직 냉장고가 비어 있어요.</strong>
+                재료를 추가하면 이곳에 냉장고가 나타나고, 유통기한 상태에 따라 재료 모습이 달라집니다.
+                <div class="form-actions" style="justify-content:center; margin-top:18px;">
+                  <button class="primary-btn" id="emptyAddFocusBtn" type="button">첫 재료 추가하기</button>
+                </div>
+              </div>
+            </div>
+            <div class="fridge-wrap" id="fridgeWrap">
+              <div class="fridge-body">
+                <div class="fridge-inside" id="fridgeInside">
+                  <div class="compartment" data-location="top">
+                    <span class="compartment-label">🥛 윗칸</span>
+                  </div>
+                  <div class="compartment compact" data-location="egg">
+                    <span class="compartment-label">🥚 계란칸</span>
+                  </div>
+                  <div class="compartment" data-location="middle">
+                    <span class="compartment-label">🍱 중간칸</span>
+                  </div>
+                  <div class="compartment" data-location="drawer">
+                    <span class="compartment-label">🥬 야채서랍</span>
+                  </div>
+                  <div class="compartment freezer-drawer" data-location="freezer">
+                    <span class="compartment-label">❄️ 냉동서랍</span>
+                  </div>
+                </div>
+              </div>
+              <div class="fridge-door" id="fridgeDoor" role="button" tabindex="0" aria-label="냉장고 열기">
+                <div class="door-front">
+                  <div class="tap-hint">문을 열고<br />안쪽 재료 보기</div>
+                  <div class="fridge-smile">🧊</div>
+                  <div class="door-sticker">쓱 열어서 재료 확인</div>
+                  <div class="door-handle"></div>
+                </div>
+                <div class="door-inner" aria-hidden="true">
+                  <div class="door-bins">
+                    <div class="door-bin small">
+                      <span class="jar" style="left:20px"></span>
+                      <span class="jar" style="left:52px"></span>
+                      <span class="jar" style="left:84px"></span>
+                    </div>
+                    <div class="door-bin compartment door-pocket" data-location="door">
+                      <span class="compartment-label">🥤 도어포켓</span>
+                    </div>
+                    <div class="door-bin">
+                      <span class="bottle" style="left:18px; height:54px"></span>
+                      <span class="bottle" style="left:48px; height:54px"></span>
+                      <span class="bottle" style="left:78px; height:54px"></span>
+                    </div>
+                    <div class="door-bin small">
+                      <span class="jar" style="left:18px"></span>
+                      <span class="jar" style="left:50px"></span>
+                      <span class="jar" style="left:82px"></span>
+                      <span class="jar" style="left:114px"></span>
+                    </div>
+                    <div class="door-bin small">
+                      <span class="bottle" style="left:20px; height:40px"></span>
+                      <span class="bottle" style="left:46px; height:40px"></span>
+                      <span class="jar" style="left:82px"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="fridge-side-panel">
+            <section class="panel">
+              <div class="panel-title">
+                <div>
+                  <h2>재료 추가</h2>
+                  <div class="muted">계란은 계란칸, 음료·소스는 도어포켓, 채소는 서랍칸으로 자동 배치됩니다.</div>
+                </div>
+              </div>
+              <form id="addFoodForm">
+                <div class="form-grid">
+                  <label>식재료 이름
+                    <input id="foodName" type="text" placeholder="예: 두부, 계란, 우유" required />
+                  </label>
+                  <label>카테고리
+                    <select id="foodCategory" required>
+                      <option value="">선택</option>
+                      <option value="채소">채소</option>
+                      <option value="과일">과일</option>
+                      <option value="육류">육류</option>
+                      <option value="해산물">해산물</option>
+                      <option value="유제품">유제품</option>
+                      <option value="냉동식품">냉동식품</option>
+                      <option value="음료/소스">음료/소스</option>
+                      <option value="기타">기타</option>
+                    </select>
+                  </label>
+                  <label>유통기한
+                    <input id="foodExpiry" type="date" required />
+                  </label>
+                  <label>위치
+                    <select id="foodLocation">
+                      <option value="auto">자동 배치</option>
+                      <option value="top">윗칸</option>
+                      <option value="egg">계란칸</option>
+                      <option value="middle">중간칸</option>
+                      <option value="drawer">야채서랍</option>
+                      <option value="door">도어포켓</option>
+                      <option value="freezer">냉동서랍</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="primary-btn" type="submit">냉장고에 넣기</button>
+                  <button class="ghost-btn" id="openFridgeBtn" type="button">냉장고 열기/닫기</button>
+                </div>
+                <p class="tiny-note">데스크톱에서는 재료를 드래그해서 칸을 바꿀 수 있고, 모바일에서는 재료 클릭 후 위치를 바꾸면 됩니다.</p>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-title">
+                <div>
+                  <h2>냉장고 상태</h2>
+                  <div class="muted">상할수록 재료가 누렇게 뜨거나 흐릿해집니다.</div>
+                </div>
+              </div>
+              <div class="food-list" id="fridgeMiniList"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="menuView" class="view">
+        <div class="chat-layout menu-chat-only">
+          <section class="panel chat-box">
+            <div class="messages" id="messages"></div>
+            <form class="chat-input-area" id="chatForm">
+              <input id="chatInput" type="text" placeholder="예: 지금 내 냉장고에 있는 음식으로 아침 메뉴 추천해줘" />
+              <button class="primary-btn" type="submit">보내기</button>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="editTitle">재료 수정</h2>
+          <div class="muted" id="editSubtitle">위치 변경, 유통기한 수정, 삭제가 가능합니다.</div>
+        </div>
+        <button class="close-btn" id="closeEditBtn" type="button">×</button>
+      </div>
+      <form id="editFoodForm">
+        <input id="editId" type="hidden" />
+        <div class="form-grid">
+          <label>식재료 이름
+            <input id="editName" type="text" required />
+          </label>
+          <label>카테고리
+            <select id="editCategory" required>
+              <option value="채소">채소</option>
+              <option value="과일">과일</option>
+              <option value="육류">육류</option>
+              <option value="해산물">해산물</option>
+              <option value="유제품">유제품</option>
+              <option value="냉동식품">냉동식품</option>
+              <option value="음료/소스">음료/소스</option>
+              <option value="기타">기타</option>
+            </select>
+          </label>
+          <label>유통기한
+            <input id="editExpiry" type="date" required />
+          </label>
+          <label>냉장고 위치
+            <select id="editLocation">
+              <option value="top">윗칸</option>
+              <option value="egg">계란칸</option>
+              <option value="middle">중간칸</option>
+              <option value="drawer">야채서랍</option>
+              <option value="door">도어포켓</option>
+              <option value="freezer">냉동서랍</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">저장하기</button>
+          <button class="danger-btn" id="deleteEditBtn" type="button">삭제하기</button>
+          <button class="ghost-btn" id="cancelEditBtn" type="button">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "fridge-survival-tabs-v3";
+    let foods = loadFoods();
+    let currentView = "home";
+    let currentListFilter = "all";
+    let draggedId = null;
+
+    const tabs = document.querySelectorAll(".tab-btn");
+    const views = {
+      home: document.getElementById("homeView"),
+      fridge: document.getElementById("fridgeView"),
+      menu: document.getElementById("menuView")
+    };
+
+    const fridgeWrap = document.getElementById("fridgeWrap");
+    const fridgeEmptyState = document.getElementById("fridgeEmptyState");
+    const fridgeDoor = document.getElementById("fridgeDoor");
+    const compartments = document.querySelectorAll(".compartment");
+    const addFoodForm = document.getElementById("addFoodForm");
+    const chatForm = document.getElementById("chatForm");
+    const messages = document.getElementById("messages");
+    const editModal = document.getElementById("editModal");
+    const toast = document.getElementById("toast");
+
+    const locationNames = {
+      top: "윗칸",
+      egg: "계란칸",
+      middle: "중간칸",
+      drawer: "야채서랍",
+      door: "도어포켓",
+      freezer: "냉동서랍"
+    };
+
+    const categoryDefaultLocation = {
+      "냉동식품": "freezer",
+      "유제품": "top",
+      "음료/소스": "door",
+      "육류": "middle",
+      "해산물": "middle",
+      "기타": "middle",
+      "채소": "drawer",
+      "과일": "drawer"
+    };
+
+    const eggKeywords = ["계란", "달걀", "egg"];
+    const doorKeywords = ["물", "주스", "음료", "탄산", "콜라", "사이다", "우유", "소스", "간장", "고추장", "된장", "케첩", "마요", "드레싱", "잼"];
+
+    function resolveAutoLocation(name, category) {
+      const lower = (name || "").toLowerCase();
+      if (eggKeywords.some(word => lower.includes(word))) return "egg";
+      if (category === "음료/소스" || doorKeywords.some(word => lower.includes(word))) return "door";
+      if (category === "채소" || category === "과일") return "drawer";
+      if (category === "냉동식품") return "freezer";
+      if (category === "육류" || category === "해산물") return "middle";
+      return categoryDefaultLocation[category] || "top";
+    }
+
+
+    function todayPlus(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function loadFoods() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveFoods() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(foods));
+    }
+
+    function uid() {
+      return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getDaysLeft(expiryDate) {
+      const today = new Date();
+      const target = new Date(expiryDate + "T00:00:00");
+      today.setHours(0, 0, 0, 0);
+      return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    }
+
+    function getStatus(food) {
+      const days = getDaysLeft(food.expiryDate);
+      if (days < 0) return { key: "expired", label: `${Math.abs(days)}일 지남`, className: "expired", badge: "status-expired", icon: "🧟" };
+      if (days === 0) return { key: "today", label: "오늘까지", className: "today", badge: "status-today", icon: "🚨" };
+      if (days <= 3) return { key: "soon", label: `${days}일 남음`, className: "soon", badge: "status-soon", icon: "⏰" };
+      return { key: "safe", label: `${days}일 남음`, className: "safe", badge: "status-safe", icon: "🌿" };
+    }
+
+    function filterMatches(food, filter) {
+      const status = getStatus(food).key;
+      if (filter === "all") return true;
+      if (filter === "soon") return status === "soon" || status === "today";
+      if (filter === "expired") return status === "expired";
+      if (filter === "safe") return status === "safe";
+      return true;
+    }
+
+    function sortByUrgency(list) {
+      return [...list].sort((a, b) => getDaysLeft(a.expiryDate) - getDaysLeft(b.expiryDate));
+    }
+
+    function getEmoji(food) {
+      const name = food.name.toLowerCase();
+      if (name.includes("계란") || name.includes("달걀")) return "🥚";
+      if (name.includes("우유") || name.includes("요거트") || name.includes("치즈")) return "🥛";
+      if (name.includes("두부")) return "⬜";
+      if (name.includes("닭")) return "🍗";
+      if (name.includes("소고") || name.includes("돼지") || name.includes("고기")) return "🥩";
+      if (name.includes("만두")) return "🥟";
+      if (name.includes("딸기")) return "🍓";
+      if (name.includes("사과")) return "🍎";
+      if (name.includes("바나나")) return "🍌";
+      if (name.includes("호박") || name.includes("오이") || name.includes("상추") || name.includes("양배추")) return "🥬";
+      if (name.includes("토마토")) return "🍅";
+      if (name.includes("파") || name.includes("양파")) return "🧅";
+      if (name.includes("생선") || name.includes("새우") || name.includes("오징어")) return "🐟";
+      const map = {
+        "채소": "🥬",
+        "과일": "🍎",
+        "육류": "🥩",
+        "해산물": "🐟",
+        "유제품": "🥛",
+        "냉동식품": "❄️",
+        "음료/소스": "🧃",
+        "기타": "🍱"
+      };
+      return map[food.category] || "🍱";
+    }
+
+    function getTip(food) {
+      const days = getDaysLeft(food.expiryDate);
+      if (days < 0) return "상태 확인 후 버릴지 결정하세요. 냉장고가 이미 힌트를 주는 중.";
+      if (days === 0) return "오늘 안에 먹는 것을 추천합니다. 내일의 나는 믿지 않는 편이 안전합니다.";
+      if (days <= 3) return "우선 소비 후보입니다. 메뉴 추천에서도 먼저 반영됩니다.";
+      return "아직 여유가 있습니다. 단, 존재 자체를 잊으면 곧 드라마가 시작됩니다.";
+    }
+
+    function setView(view) {
+      currentView = view;
+      tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.view === view));
+      Object.entries(views).forEach(([key, el]) => el.classList.toggle("active", key === view));
+      const introHero = document.getElementById("introHero");
+      if (introHero) introHero.style.display = view === "home" ? "grid" : "none";
+      if (view === "fridge" && foods.length) setTimeout(() => fridgeWrap.classList.add("open"), 180);
+      render();
+    }
+
+    function openToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(openToast.timer);
+      openToast.timer = setTimeout(() => toast.classList.remove("show"), 1900);
+    }
+
+    function foodRowTemplate(food) {
+      const status = getStatus(food);
+      return `
+        <article class="food-row" role="button" tabindex="0" data-edit-id="${food.id}">
+          <div class="food-icon">${getEmoji(food)}</div>
+          <div>
+            <div class="food-name">${escapeHtml(food.name)}</div>
+            <div class="food-meta">${escapeHtml(food.category)} · ${locationNames[food.location] || "미지정"} · ${food.expiryDate}<br>${getTip(food)}</div>
+          </div>
+          <span class="status-badge ${status.badge}">${status.icon} ${status.label}</span>
+        </article>
+      `;
+    }
+
+    function renderStats() {
+      document.getElementById("statTotal").textContent = foods.length;
+      document.getElementById("statSoon").textContent = foods.filter(f => filterMatches(f, "soon")).length;
+      document.getElementById("statExpired").textContent = foods.filter(f => filterMatches(f, "expired")).length;
+      document.getElementById("statSafe").textContent = foods.filter(f => filterMatches(f, "safe")).length;
+    }
+
+    function renderHomeList() {
+      const titleMap = {
+        all: ["전체 재료", "냉장고에 등록된 모든 식재료입니다."],
+        soon: ["곧 유통기한이 지나는 재료", "오늘부터 먼저 먹어야 할 구조 대상입니다."],
+        expired: ["버려야 할 수도 있는 재료", "상태를 확인하고 냉장고 평화를 되찾으세요."],
+        safe: ["아직 여유 있는 재료", "방심은 금물. 그래도 지금은 안전권입니다."]
+      };
+      document.getElementById("homeListTitle").textContent = titleMap[currentListFilter][0];
+      document.getElementById("homeListSubtitle").textContent = titleMap[currentListFilter][1];
+      document.querySelectorAll("[data-list-filter]").forEach(btn => btn.classList.toggle("active", btn.dataset.listFilter === currentListFilter));
+
+      const list = sortByUrgency(foods.filter(food => filterMatches(food, currentListFilter)));
+      const container = document.getElementById("homeFoodList");
+      container.innerHTML = list.length
+        ? list.map(foodRowTemplate).join("")
+        : `<div class="empty-box">아직 표시할 재료가 없습니다.<br>재료를 추가하면 이곳에 목록이 생깁니다.</div>`;
+    }
+
+    function renderRescueRecipes() {
+      const target = sortByUrgency(foods.filter(f => filterMatches(f, "soon") || filterMatches(f, "expired"))).slice(0, 4);
+      const container = document.getElementById("rescueRecipes");
+      if (!foods.length) {
+        container.innerHTML = `<div class="empty-box">재료를 추가하면 오늘의 구조 메뉴를 보여줍니다.</div>`;
+        return;
+      }
+      const source = target.length ? target : sortByUrgency(foods).slice(0, 4);
+      const suggestions = buildMenuSuggestions("빠르게", source, 3);
+      container.innerHTML = suggestions.map(item => `
+        <div class="recipe-card">
+          <div class="recipe-title">${item.title}</div>
+          <div class="recipe-text">${item.text}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderFridgeItems() {
+      if (fridgeWrap && fridgeEmptyState) {
+        fridgeWrap.style.display = foods.length ? "block" : "none";
+        fridgeEmptyState.style.display = foods.length ? "none" : "grid";
+      }
+      compartments.forEach(compartment => {
+        const label = compartment.querySelector(".compartment-label").outerHTML;
+        compartment.innerHTML = label;
+      });
+
+      sortByUrgency(foods).forEach(food => {
+        const status = getStatus(food);
+        const el = document.createElement("button");
+        el.className = `fridge-item ${status.className}`;
+        el.draggable = true;
+        el.dataset.id = food.id;
+        el.title = `${food.name} · ${status.label}`;
+        el.innerHTML = `<span>${getEmoji(food)}</span><span>${escapeHtml(food.name)}</span>`;
+        el.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openEditModal(food.id);
+        });
+        el.addEventListener("dragstart", () => {
+          draggedId = food.id;
+          setTimeout(() => el.style.opacity = "0.45", 0);
+        });
+        el.addEventListener("dragend", () => {
+          draggedId = null;
+          el.style.opacity = "";
+        });
+        const target = document.querySelector(`.compartment[data-location="${food.location}"]`) || document.querySelector(`.compartment[data-location="middle"]`);
+        target.appendChild(el);
+      });
+
+      document.getElementById("fridgeMiniList").innerHTML = foods.length
+        ? sortByUrgency(foods).slice(0, 6).map(foodRowTemplate).join("")
+        : `<div class="empty-box">아직 등록된 재료가 없습니다.<br>위의 입력창에서 첫 재료를 추가해보세요.</div>`;
+    }
+
+    function renderIngredientCloud() {
+      const cloud = document.getElementById("ingredientCloud");
+      if (!foods.length) {
+        cloud.innerHTML = `<div class="empty-box">재료를 추가하면 채팅이 더 똑똑해집니다.</div>`;
+        return;
+      }
+      cloud.innerHTML = sortByUrgency(foods).map(food => {
+        const status = getStatus(food);
+        return `<span class="ingredient-chip">${getEmoji(food)} ${escapeHtml(food.name)} · ${status.label}</span>`;
+      }).join("");
+    }
+
+    function render() {
+      renderStats();
+      renderHomeList();
+      renderRescueRecipes();
+      renderFridgeItems();
+      bindFoodRows();
+    }
+
+    function bindFoodRows() {
+      document.querySelectorAll("[data-edit-id]").forEach(row => {
+        row.onclick = () => openEditModal(row.dataset.editId);
+        row.onkeydown = (event) => {
+          if (event.key === "Enter") openEditModal(row.dataset.editId);
+        };
+      });
+    }
+
+    function addFood(event) {
+      event.preventDefault();
+      const name = document.getElementById("foodName").value.trim();
+      const category = document.getElementById("foodCategory").value;
+      const expiryDate = document.getElementById("foodExpiry").value;
+      const selectedLocation = document.getElementById("foodLocation").value;
+      if (!name || !category || !expiryDate) return;
+
+      const location = selectedLocation === "auto" ? resolveAutoLocation(name, category) : selectedLocation;
+      foods.push({ id: uid(), name, category, expiryDate, location, createdAt: new Date().toISOString() });
+      saveFoods();
+      addFoodForm.reset();
+      fridgeWrap.classList.add("open");
+      render();
+      openToast(`${name} 냉장고 입성 완료`);
+    }
+
+    function openEditModal(id) {
+      const food = foods.find(item => item.id === id);
+      if (!food) return;
+      document.getElementById("editId").value = food.id;
+      document.getElementById("editName").value = food.name;
+      document.getElementById("editCategory").value = food.category;
+      document.getElementById("editExpiry").value = food.expiryDate;
+      document.getElementById("editLocation").value = food.location;
+      document.getElementById("editTitle").textContent = `${getEmoji(food)} ${food.name}`;
+      document.getElementById("editSubtitle").textContent = `${getStatus(food).label} · ${getTip(food)}`;
+      editModal.classList.add("open");
+    }
+
+    function closeEditModal() {
+      editModal.classList.remove("open");
+    }
+
+    function updateFood(event) {
+      event.preventDefault();
+      const id = document.getElementById("editId").value;
+      const food = foods.find(item => item.id === id);
+      if (!food) return;
+      food.name = document.getElementById("editName").value.trim();
+      food.category = document.getElementById("editCategory").value;
+      food.expiryDate = document.getElementById("editExpiry").value;
+      food.location = document.getElementById("editLocation").value;
+      saveFoods();
+      render();
+      closeEditModal();
+      openToast("수정 완료");
+    }
+
+    function deleteEditingFood() {
+      const id = document.getElementById("editId").value;
+      const food = foods.find(item => item.id === id);
+      foods = foods.filter(item => item.id !== id);
+      saveFoods();
+      render();
+      closeEditModal();
+      openToast(food ? `${food.name} 삭제 완료` : "삭제 완료");
+    }
+
+    function moveFoodToLocation(id, location) {
+      const food = foods.find(item => item.id === id);
+      if (!food) return;
+      food.location = location;
+      saveFoods();
+      render();
+      openToast(`${food.name} → ${locationNames[location]} 이동`);
+    }
+
+    function guessCategoryByName(name) {
+      const lower = name.toLowerCase();
+      if (["물", "주스", "음료", "탄산", "콜라", "사이다", "간장", "고추장", "된장", "케첩", "마요", "드레싱", "잼"].some(word => lower.includes(word))) return "음료/소스";
+      if (["계란", "달걀", "우유", "요거트", "치즈", "버터", "크림"].some(word => lower.includes(word))) return "유제품";
+      if (["닭", "돼지", "소고", "고기", "베이컨", "햄", "소시지", "스팸"].some(word => lower.includes(word))) return "육류";
+      if (["생선", "새우", "오징어", "연어", "고등어", "참치"].some(word => lower.includes(word))) return "해산물";
+      if (["만두", "냉동", "떡", "피자"].some(word => lower.includes(word))) return "냉동식품";
+      if (["사과", "바나나", "딸기", "귤", "포도", "복숭아", "키위", "레몬"].some(word => lower.includes(word))) return "과일";
+      if (["상추", "양배추", "양파", "파", "대파", "마늘", "오이", "토마토", "호박", "버섯", "감자", "당근", "브로콜리", "시금치", "콩나물", "숙주", "고추"].some(word => lower.includes(word))) return "채소";
+      return "기타";
+    }
+
+    function buildVirtualFood(name) {
+      return {
+        id: `user-${name}`,
+        name,
+        category: guessCategoryByName(name),
+        expiryDate: todayPlus(7),
+        location: resolveAutoLocation(name, guessCategoryByName(name)),
+        createdAt: new Date().toISOString(),
+        isUserProvided: true
+      };
+    }
+
+    function buildMenuSuggestions(meal, sourceFoods = foods, count = 3) {
+      const available = sortByUrgency(sourceFoods.length ? sourceFoods : foods);
+      const names = available.map(f => f.name);
+      const userProvided = available.some(f => f.isUserProvided);
+      const urgent = available.filter(f => !f.isUserProvided && getDaysLeft(f.expiryDate) <= 3).map(f => f.name);
+      const has = keyword => names.some(name => name.includes(keyword));
+      const categoryHas = category => available.some(f => f.category === category);
+      const pick = (index, fallback = "남은 재료") => names[index] || fallback;
+      const pickDifferent = (base, fallback = "채소나 밥") => names.find(name => name !== base) || fallback;
+      const listText = names.length ? names.slice(0, 4).join(", ") : "등록된 재료";
+      const urgentText = userProvided
+        ? "말해준 재료를 우선으로 쓸게요."
+        : urgent.length
+          ? `특히 ${urgent.slice(0, 3).join(", ")}부터 쓰면 좋아요.`
+          : "냉장고 재료 중 어울리는 것부터 가볍게 조합할게요.";
+
+      const ideas = [];
+      const mealHint = meal.includes("아침") ? "아침" : meal.includes("점심") ? "점심" : meal.includes("저녁") ? "저녁" : "오늘";
+      const first = pick(0);
+      const second = pickDifferent(first);
+
+      if ((has("김치") && (has("밥") || has("햇반"))) || (has("김치") && (has("계란") || has("달걀")))) {
+        ideas.push({
+          title: `${mealHint} 메뉴 · 김치 계란 볶음밥`,
+          text: `김치를 먼저 볶고 ${has("계란") || has("달걀") ? "계란을 마지막에 넣어" : "밥을 넣어"} 마무리하세요. ${urgentText}`
+        });
+      }
+
+      if (has("계란") || has("달걀")) {
+        ideas.push({
+          title: `${mealHint} 메뉴 · 부드러운 계란 스크램블`,
+          text: `계란을 풀고 ${second}이 있으면 작게 썰어 같이 볶아보세요. 아침 요청이면 밥보다 토스트나 간단한 과일을 곁들이면 부담이 적습니다. ${urgentText}`
+        });
+      }
+
+      if (has("두부")) {
+        ideas.push({
+          title: `${mealHint} 메뉴 · 두부 구이 볼`,
+          text: `두부를 노릇하게 굽고 ${second}을 곁들여 간장·참기름으로 마무리하세요. 밥 위에 올리면 바로 한 그릇 메뉴가 됩니다.`
+        });
+      }
+
+      if (categoryHas("육류") || has("닭") || has("햄") || has("스팸")) {
+        ideas.push({
+          title: `${mealHint} 메뉴 · 단백질 빠른 볶음`,
+          text: `${first}와 ${second}을 팬에 볶고 간장이나 소금으로 간을 맞추세요. 밥, 면, 또띠아 중 있는 것에 얹으면 한 끼로 충분합니다.`
+        });
+      }
+
+      if (categoryHas("채소") || categoryHas("과일")) {
+        const greens = available.filter(f => f.category === "채소" || f.category === "과일").slice(0, 3).map(f => f.name).join(", ") || first;
+        ideas.push({
+          title: `${mealHint} 메뉴 · 가벼운 비빔볼`,
+          text: `${greens}을 중심으로 그릇에 담고, 계란·두부·고기류가 있으면 같이 올려주세요. 드레싱은 간장+참기름 또는 소금+올리브오일 느낌이면 충분합니다.`
+        });
+      }
+
+      if (has("만두") || has("라면") || has("면")) {
+        ideas.push({
+          title: `${mealHint} 메뉴 · 냉장고 털이 국물 메뉴`,
+          text: `${first}에 ${second}을 더해 국물이나 면 메뉴로 만들면 빠릅니다. 야채가 있으면 마지막에 넣어 식감을 살려주세요.`
+        });
+      }
+
+      ideas.push({
+        title: `${mealHint} 메뉴 · ${listText} 빠른 볶음`,
+        text: `${listText} 중 바로 익는 재료부터 팬에 넣고 볶아보세요. 양념은 간장+마늘+참기름 조합이면 대체로 안전합니다.`
+      });
+
+      const unique = [];
+      ideas.forEach(item => {
+        if (!unique.some(saved => saved.title === item.title)) unique.push(item);
+      });
+      return unique.slice(0, count);
+    }
+
+    function detectMeal(text) {
+      if (text.includes("아침") || text.includes("브런치")) return "아침";
+      if (text.includes("점심") || text.includes("런치")) return "점심";
+      if (text.includes("저녁") || text.includes("밤") || text.includes("야식") || text.includes("디너")) return "저녁";
+      return "오늘";
+    }
+
+    function isGreeting(text) {
+      const normalized = text.trim().toLowerCase().replace(/[!?.~\s]/g, "");
+      return ["하이", "ㅎㅇ", "안녕", "안녕하세요", "헬로", "hello", "hi", "hey", "반가워", "방가"].includes(normalized);
+    }
+
+    function isThanks(text) {
+      return /(고마워|감사|땡큐|thanks|thank you)/i.test(text);
+    }
+
+    function isMenuIntent(text) {
+      return /(메뉴|추천|요리|레시피|만들|만들어|먹|식사|끼니|아침|점심|저녁|야식|볶|끓|굽|구워|조리|반찬|간식|다이어트|칼로리)/.test(text);
+    }
+
+    const knownFoodNames = [
+      "계란", "달걀", "김치", "밥", "햇반", "두부", "우유", "요거트", "치즈", "버터",
+      "식빵", "토스트", "베이컨", "햄", "소시지", "스팸", "닭가슴살", "닭고기", "닭",
+      "돼지고기", "소고기", "고기", "참치", "참치캔", "고등어", "연어", "새우", "오징어", "생선",
+      "양파", "대파", "파", "마늘", "감자", "고구마", "당근", "애호박", "호박", "버섯",
+      "양배추", "양상추", "상추", "토마토", "오이", "브로콜리", "시금치", "콩나물", "숙주", "고추",
+      "사과", "바나나", "딸기", "귤", "포도", "레몬", "라면", "만두", "떡", "면", "파스타"
+    ];
+
+    let chatMemory = {
+      lastFoods: [],
+      lastMeal: null
+    };
+
+    function hasFoodConnector(text) {
+      return /(,|，|、|\/|랑|이랑|하고|와|과|및|또|플러스|으로|로|가지고|갖고|활용|사용|재료|식재료|음식)/.test(text);
+    }
+
+    function hasKnownFoodMention(text) {
+      return foods.some(food => text.includes(food.name)) || knownFoodNames.some(name => text.includes(name));
+    }
+
+    function isCasualOrComplaint(text) {
+      const normalized = text.trim().replace(/\s+/g, "");
+      if (isMenuIntent(text) || hasKnownFoodMention(text)) return false;
+      return /(왜이래|왜그래|뭐야|뭔데|어머|아니|헐|엥|음|흠|그냥|테스트|ㅋㅋ|ㅎㅎ|하이|안녕|이상해|오류|버그|별로|싫어|어색|무섭|당황)/.test(normalized);
+    }
+
+    function extractRequestedFoods(text, allowLoose = false) {
+      const found = [];
+
+      foods.forEach(food => {
+        if (text.includes(food.name) && !found.some(item => item.name === food.name)) found.push(food);
+      });
+
+      knownFoodNames.forEach(name => {
+        if (text.includes(name) && !found.some(item => item.name === name)) {
+          const saved = foods.find(food => food.name === name || food.name.includes(name) || name.includes(food.name));
+          found.push(saved || buildVirtualFood(name));
+        }
+      });
+
+      if (!allowLoose) return found.slice(0, 8);
+
+      const cleaned = text
+        .replace(/["'‘’“”]/g, " ")
+        .replace(/으로|로|가지고|갖고|활용해서|활용|사용해서|사용|만들어줘|만들어|추천해줘|추천|요리해줘|요리|아침|점심|저녁|메뉴|레시피|해줘|해줄래/g, " ")
+        .replace(/그리고|랑|이랑|하고|와|과|및|또|플러스/g, ",");
+
+      cleaned.split(/[,،\/\n]+/).map(part => part.trim()).filter(Boolean).forEach(part => {
+        const candidate = part.replace(/[^가-힣a-zA-Z0-9]/g, "").trim();
+        const looksLikeSentence = /(왜|뭐|어머|아니|그냥|혹시|해주세요|해줄래|지금|냉장고|있는|없는|음식|재료|오늘|내|나|좀|이거|저거|그거|요거|얘|애|너|우리|메뉴|추천)/.test(candidate);
+        if (candidate.length >= 2 && candidate.length <= 8 && !looksLikeSentence) {
+          if (!found.some(item => item.name === candidate)) found.push(buildVirtualFood(candidate));
+        }
+      });
+
+      return found.slice(0, 8);
+    }
+
+    function botReply(userText) {
+      const text = userText.trim();
+
+      if (isGreeting(text)) {
+        return "안녕하세요. 냉장고 재료로 메뉴를 추천해드릴게요. 재료나 식사 시간을 말해 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.";
+      }
+
+      if (isThanks(text)) {
+        return "천만에요. 다른 재료나 식사 시간을 말해주면 이어서 추천해드릴게요.";
+      }
+
+      if (isCasualOrComplaint(text)) {
+        return "앗, 방금 말은 메뉴 요청으로 이해하지 않을게요. 메뉴 추천이 필요하면 ‘계란이랑 양파로 아침 만들어줘’처럼 재료와 식사 시간을 같이 말해 주세요.";
+      }
+
+      const menuIntent = isMenuIntent(text);
+      const allowLooseFoodExtraction = menuIntent && hasFoodConnector(text);
+      const requestedFoods = extractRequestedFoods(text, allowLooseFoodExtraction);
+      const pointsToUnknownItem = /(이거|저거|요거)/.test(text) && !requestedFoods.length && hasFoodConnector(text);
+
+      if (menuIntent && pointsToUnknownItem) {
+        return "‘이거’가 어떤 재료인지 제가 직접 볼 수는 없어요. 재료명을 적어주면 그 재료만 기준으로 추천할게요. 예: ‘계란이랑 양파로 아침 만들어줘’.";
+      }
+
+      if (!menuIntent) {
+        if (requestedFoods.length) {
+          chatMemory.lastFoods = requestedFoods;
+          return `${requestedFoods.map(f => `${getEmoji(f)} ${f.name}`).join(", ")} 재료를 말해주신 걸로 이해했어요. 아침·점심·저녁 중 어떤 메뉴로 추천할까요?`;
+        }
+        return "아직 메뉴 요청으로 이해하지 않았어요. ‘아침 추천해줘’, ‘계란이랑 김치로 뭐 만들까?’처럼 말해주면 그 요청에 맞춰 답할게요.";
+      }
+
+      if (!foods.length && !requestedFoods.length && !chatMemory.lastFoods.length) {
+        return "아직 냉장고에 등록된 재료가 없어요. 재료를 먼저 넣거나, 채팅창에 직접 재료명을 적어주세요. 예: ‘계란, 양파로 아침 만들어줘’.";
+      }
+
+      const meal = detectMeal(text);
+      const urgent = sortByUrgency(foods.filter(f => getDaysLeft(f.expiryDate) <= 3));
+      const wantsUrgent = text.includes("임박") || text.includes("유통기한") || text.includes("빨리") || text.includes("버리") || text.includes("상할");
+      const wantsPrevious = /(그걸로|그거로|그 재료|아까|방금|이걸로|이거로)/.test(text) && chatMemory.lastFoods.length;
+      const useSource = requestedFoods.length
+        ? requestedFoods
+        : wantsPrevious
+          ? chatMemory.lastFoods
+          : wantsUrgent
+            ? (urgent.length ? urgent : foods)
+            : foods;
+
+      if (!useSource.length) {
+        return "추천에 쓸 재료를 찾지 못했어요. 실제 재료명을 넣어 주세요. 예: ‘계란이랑 양파로 아침 만들어줘’.";
+      }
+
+      chatMemory.lastFoods = useSource;
+      chatMemory.lastMeal = meal;
+      const suggestions = buildMenuSuggestions(meal, useSource, 3);
+
+      const sourceLine = requestedFoods.length || wantsPrevious
+        ? `사용할 재료: ${useSource.map(f => `${getEmoji(f)} ${f.name}`).join(", ")}`
+        : urgent.length
+          ? `먼저 써야 할 재료: ${urgent.map(f => `${getEmoji(f)} ${f.name}(${getStatus(f).label})`).join(", ")}`
+          : "지금은 긴급 재료가 많지 않아요. 등록된 재료를 기준으로 추천할게요.";
+
+      const toneLine = requestedFoods.length || wantsPrevious
+        ? `${meal} 요청에 맞춰, 말해준 재료만 우선해서 추천할게요.`
+        : `${meal} 기준으로 냉장고 재료에서 추천할게요.`;
+
+      return `${toneLine}\n\n${sourceLine}\n\n` + suggestions.map((item, index) => `${index + 1}. ${item.title}\n- ${item.text}`).join("\n\n");
+    }
+
+    function addMessage(role, text) {
+      const el = document.createElement("div");
+      el.className = `message ${role}`;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function handleChat(event) {
+      event.preventDefault();
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage("user", text);
+      input.value = "";
+      setTimeout(() => addMessage("bot", botReply(text)), 260);
+    }
+
+    tabs.forEach(tab => tab.addEventListener("click", () => setView(tab.dataset.view)));
+
+    document.querySelectorAll("[data-stat-filter]").forEach(card => {
+      card.addEventListener("click", () => {
+        currentListFilter = card.dataset.statFilter;
+        document.querySelectorAll("[data-list-filter]").forEach(btn => btn.classList.toggle("active", btn.dataset.listFilter === currentListFilter));
+        renderHomeList();
+        bindFoodRows();
+        document.getElementById("homeListTitle").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+
+    document.querySelectorAll("[data-list-filter]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentListFilter = btn.dataset.listFilter;
+        renderHomeList();
+        bindFoodRows();
+      });
+    });
+
+    fridgeDoor.addEventListener("click", () => fridgeWrap.classList.toggle("open"));
+    fridgeDoor.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") fridgeWrap.classList.toggle("open");
+    });
+    document.getElementById("openFridgeBtn").addEventListener("click", () => fridgeWrap.classList.toggle("open"));
+    document.getElementById("openAddBtn").addEventListener("click", () => {
+      setView("fridge");
+      setTimeout(() => document.getElementById("foodName").focus(), 80);
+    });
+    document.getElementById("emptyAddFocusBtn").addEventListener("click", () => {
+      document.getElementById("foodName").scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => document.getElementById("foodName").focus(), 260);
+    });
+    addFoodForm.addEventListener("submit", addFood);
+
+    compartments.forEach(compartment => {
+      compartment.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        compartment.classList.add("drag-over");
+      });
+      compartment.addEventListener("dragleave", () => compartment.classList.remove("drag-over"));
+      compartment.addEventListener("drop", (event) => {
+        event.preventDefault();
+        compartment.classList.remove("drag-over");
+        if (draggedId) moveFoodToLocation(draggedId, compartment.dataset.location);
+      });
+    });
+
+    document.getElementById("editFoodForm").addEventListener("submit", updateFood);
+    document.getElementById("deleteEditBtn").addEventListener("click", deleteEditingFood);
+    document.getElementById("closeEditBtn").addEventListener("click", closeEditModal);
+    document.getElementById("cancelEditBtn").addEventListener("click", closeEditModal);
+    editModal.addEventListener("click", (event) => {
+      if (event.target === editModal) closeEditModal();
+    });
+
+    chatForm.addEventListener("submit", handleChat);
+    document.querySelectorAll("[data-prompt]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.getElementById("chatInput").value = btn.dataset.prompt;
+        chatForm.requestSubmit();
+      });
+    });
+
+    addMessage("bot", "안녕하세요. 냉장고 재료를 기준으로 메뉴를 추천해드릴게요. 예: ‘지금 내 냉장고에 있는 음식으로 아침 메뉴 추천해줘’");
+    render();
+  </script>
+</body>
+</html>
