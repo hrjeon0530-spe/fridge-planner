@@ -1675,14 +1675,6 @@
         <button class="close-btn" id="closeSignupBtn" type="button">×</button>
       </div>
       <p class="signup-copy" id="signupMessage">회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.</p>
-      <div class="auth-fields">
-        <label>이메일
-          <input id="signupEmail" type="email" placeholder="you@example.com" autocomplete="email" />
-        </label>
-        <label>비밀번호
-          <input id="signupPassword" type="password" placeholder="6자 이상" autocomplete="new-password" />
-        </label>
-      </div>
       <div class="provider-grid provider-only-actions" aria-label="회원가입 경로 선택">
         <button class="provider-btn google" type="button" data-provider="Google">🔎 Google로 가입</button>
         <button class="provider-btn naver" type="button" data-provider="Naver">N Naver로 가입</button>
@@ -1691,7 +1683,7 @@
       <div class="form-actions">
         <button class="ghost-btn" id="skipSignupBtn" type="button">나중에 할게요</button>
       </div>
-      <div class="signup-note">현재 파일은 정적 데모라 이메일·비밀번호와 가입 경로를 브라우저에 저장해 연동 상태를 시뮬레이션합니다. 실제 서비스에서는 각 제공자의 OAuth와 서버 인증이 필요합니다.</div>
+      <div class="signup-note">현재 버튼은 소셜 로그인 흐름을 확인하는 데모입니다. 버튼을 누르면 바로 가입된 상태로 전환되며, 실제 배포 시에는 각 로그인 제공자의 인증 화면으로 연결됩니다.</div>
     </div>
   </div>
 
@@ -1743,7 +1735,7 @@
         </div>
         <button class="close-btn" id="closeWithdrawConfirmBtn" type="button">×</button>
       </div>
-      <p class="signup-copy">회원 탈퇴를 진행하면 닉네임, 이메일, 회원가입 경로, 가입일 정보가 초기화됩니다. 냉장고에 등록한 재료는 이 브라우저의 로컬 저장소에 그대로 남겨둡니다.</p>
+      <p class="signup-copy">회원 탈퇴를 진행하면 계정 정보, 냉장고에 등록한 모든 식재료, 메뉴 추천 AI와 나눈 대화 기록이 전부 삭제됩니다. 삭제한 기록은 복구할 수 없습니다.</p>
       <div class="form-actions">
         <button class="danger-btn" id="confirmWithdrawBtn" type="button">탈퇴하기</button>
         <button class="ghost-btn" id="cancelWithdrawBtn" type="button">취소</button>
@@ -1757,6 +1749,7 @@
     const STORAGE_KEY = "fridge-survival-tabs-v4";
     const AUTH_KEY = "fridge-survival-auth-v1";
     const SIGNUP_NUDGE_KEY = "fridge-survival-signup-nudge-v1";
+    const CHAT_KEY = "fridge-survival-chat-v1";
     let foods = loadFoods();
     let authState = loadAuthState();
     let currentView = "home";
@@ -1811,14 +1804,50 @@
 
     foods = foods.map(food => ({
       ...food,
-      storedDate: food.storedDate || (food.createdAt ? String(food.createdAt).slice(0, 10) : todayValue()),
+      storedDate: food.storedDate || (food.createdAt ? localDateFromTimestamp(food.createdAt) : todayValue()),
       expiryDate: food.expiryDate || ""
     }));
 
+    function normalizeFoodText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function findLongestKeyword(value, keywords) {
+      const text = normalizeFoodText(value);
+      const sorted = [...keywords].sort((a, b) => b.length - a.length);
+      const exact = sorted.find(keyword => text === keyword.toLowerCase());
+      if (exact) return exact;
+      return sorted.find(keyword => text.includes(keyword.toLowerCase())) || null;
+    }
+
+    function containsDistinctFoodTerm(text, term, vocabulary = []) {
+      const normalizedText = normalizeFoodText(text);
+      const normalizedTerm = normalizeFoodText(term);
+      if (!normalizedTerm || !normalizedText.includes(normalizedTerm)) return false;
+      const longerBlocker = vocabulary
+        .map(normalizeFoodText)
+        .filter(candidate => candidate.length > normalizedTerm.length && candidate.includes(normalizedTerm))
+        .some(candidate => normalizedText.includes(candidate));
+      return !longerBlocker;
+    }
+
+    function hasBatchim(word) {
+      const text = String(word || "").trim();
+      if (!text) return false;
+      const code = text.charCodeAt(text.length - 1);
+      if (code < 0xAC00 || code > 0xD7A3) return false;
+      return (code - 0xAC00) % 28 !== 0;
+    }
+
+    function withJosa(word, pair) {
+      const [withBatchim, withoutBatchim] = pair.split("/");
+      return `${word}${hasBatchim(word) ? withBatchim : withoutBatchim}`;
+    }
+
     function resolveAutoLocation(name, category) {
       const lower = (name || "").toLowerCase();
-      if (eggKeywords.some(word => lower.includes(word))) return "egg";
-      if (category === "음료/소스" || doorKeywords.some(word => lower.includes(word))) return "door";
+      if (findLongestKeyword(lower, eggKeywords)) return "egg";
+      if (category === "음료/소스" || findLongestKeyword(lower, doorKeywords)) return "door";
       if (category === "채소" || category === "과일") return "drawer";
       if (category === "냉동식품") return "freezer";
       if (category === "육류" || category === "해산물") return "middle";
@@ -1826,14 +1855,26 @@
     }
 
 
+    function formatLocalDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function localDateFromTimestamp(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "" : formatLocalDate(date);
+    }
+
     function todayPlus(days) {
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      return d.toISOString().slice(0, 10);
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      return formatLocalDate(date);
     }
 
     function todayValue() {
-      return new Date().toISOString().slice(0, 10);
+      return formatLocalDate(new Date());
     }
 
     function loadAuthState() {
@@ -1957,20 +1998,26 @@
     }
 
     function getEmoji(food) {
-      const name = food.name.toLowerCase();
-      if (name.includes("계란") || name.includes("달걀")) return "🥚";
-      if (name.includes("우유") || name.includes("요거트") || name.includes("치즈")) return "🥛";
-      if (name.includes("두부")) return "⬜";
-      if (name.includes("닭")) return "🍗";
-      if (name.includes("소고") || name.includes("돼지") || name.includes("고기")) return "🥩";
-      if (name.includes("만두")) return "🥟";
-      if (name.includes("딸기")) return "🍓";
-      if (name.includes("사과")) return "🍎";
-      if (name.includes("바나나")) return "🍌";
-      if (name.includes("호박") || name.includes("오이") || name.includes("상추") || name.includes("양배추")) return "🥬";
-      if (name.includes("토마토")) return "🍅";
-      if (name.includes("파") || name.includes("양파")) return "🧅";
-      if (name.includes("생선") || name.includes("새우") || name.includes("오징어")) return "🐟";
+      const name = normalizeFoodText(food.name);
+      const emojiRules = [
+        { keywords: ["닭가슴살", "닭고기", "닭"], emoji: "🍗" },
+        { keywords: ["돼지고기", "소고기", "고기"], emoji: "🥩" },
+        { keywords: ["파스타", "스파게티"], emoji: "🍝" },
+        { keywords: ["계란", "달걀"], emoji: "🥚" },
+        { keywords: ["요거트", "치즈", "우유"], emoji: "🥛" },
+        { keywords: ["두부"], emoji: "⬜" },
+        { keywords: ["만두"], emoji: "🥟" },
+        { keywords: ["딸기"], emoji: "🍓" },
+        { keywords: ["사과"], emoji: "🍎" },
+        { keywords: ["바나나"], emoji: "🍌" },
+        { keywords: ["양배추", "상추", "애호박", "호박", "오이"], emoji: "🥬" },
+        { keywords: ["토마토"], emoji: "🍅" },
+        { keywords: ["양파", "대파", "파"], emoji: "🧅" },
+        { keywords: ["오징어", "생선", "새우"], emoji: "🐟" }
+      ];
+      for (const rule of emojiRules) {
+        if (findLongestKeyword(name, rule.keywords)) return rule.emoji;
+      }
       const map = {
         "채소": "🥬",
         "과일": "🍎",
@@ -2019,8 +2066,6 @@
       pendingView = nextView;
       if (accountModal) accountModal.classList.remove("open");
       if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
-      const emailInput = document.getElementById("signupEmail");
-      const passwordInput = document.getElementById("signupPassword");
       const titleEl = document.getElementById("signupTitle");
       const subtitleEl = document.getElementById("signupSubtitle");
       const messageEl = document.getElementById("signupMessage");
@@ -2028,15 +2073,17 @@
       if (reason === "withdrawn") {
         if (titleEl) titleEl.textContent = "다시 가입하시겠어요?";
         if (subtitleEl) subtitleEl.textContent = "회원 탈퇴가 완료되어 현재는 게스트 상태예요.";
-        if (messageEl) messageEl.textContent = "기록을 안정적으로 저장하려면 Google·Naver·Kakao 중 하나로 다시 가입해 주세요.";
+        if (messageEl) messageEl.textContent = "계정과 냉장고·대화 기록이 모두 삭제됐어요. 다시 이용하려면 Google·Naver·Kakao 중 하나로 가입해 주세요.";
+      } else if (reason === "feature") {
+        if (titleEl) titleEl.textContent = "회원가입이 필요한 기능이에요!";
+        if (subtitleEl) subtitleEl.textContent = "식재료 저장과 메뉴 추천 AI는 회원가입 후 사용할 수 있어요.";
+        if (messageEl) messageEl.textContent = "Google·Naver·Kakao 중 하나를 선택하면 바로 가입된 상태로 전환됩니다.";
       } else {
         if (titleEl) titleEl.textContent = "잠시만요!";
         if (subtitleEl) subtitleEl.textContent = "회원가입을 하지 않아 기록 저장이 되지 않을 수 있어요.";
         if (messageEl) messageEl.textContent = "회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.";
       }
 
-      if (emailInput) emailInput.value = authState.email || "";
-      if (passwordInput) passwordInput.value = "";
       signupModal.classList.add("open");
     }
 
@@ -2050,27 +2097,11 @@
     }
 
     function completeSignup(provider) {
-      const emailInput = document.getElementById("signupEmail");
-      const passwordInput = document.getElementById("signupPassword");
-      const email = emailInput ? emailInput.value.trim() : "";
-      const password = passwordInput ? passwordInput.value : "";
-
-      if (!email || !email.includes("@")) {
-        openToast("이메일을 입력해 주세요");
-        if (emailInput) emailInput.focus();
-        return;
-      }
-      if (!password || password.length < 6) {
-        openToast("비밀번호는 6자 이상 입력해 주세요");
-        if (passwordInput) passwordInput.focus();
-        return;
-      }
-
       authState = {
         ...authState,
         registered: true,
         provider,
-        email,
+        email: "",
         joinedAt: authState.joinedAt || new Date().toISOString(),
         nickname: authState.nickname || ""
       };
@@ -2078,8 +2109,6 @@
       renderAccountUI();
       closeSignupModal(true);
       openToast(`${provider} 계정 연결 완료`);
-      if (emailInput) emailInput.value = "";
-      if (passwordInput) passwordInput.value = "";
     }
 
     function renderAccountUI() {
@@ -2095,8 +2124,8 @@
       if (nicknameInput) nicknameInput.value = getNickname();
       if (statusEl) statusEl.textContent = isGuestUser() ? "게스트" : "회원";
       if (providerEl) providerEl.textContent = authState.provider || "미가입";
-      if (emailEl) emailEl.textContent = authState.email || "미등록";
-      if (joinedAtEl) joinedAtEl.textContent = authState.joinedAt ? String(authState.joinedAt).slice(0, 10) : "미가입";
+      if (emailEl) emailEl.textContent = authState.email || (authState.provider ? "소셜 계정에서 제공" : "미등록");
+      if (joinedAtEl) joinedAtEl.textContent = authState.joinedAt ? localDateFromTimestamp(authState.joinedAt) : "미가입";
       if (helpEl) helpEl.textContent = hasNickname()
         ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
         : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
@@ -2144,6 +2173,7 @@
     }
 
     function completeWithdrawAccount() {
+      // 계정 정보 초기화
       authState = {
         registered: false,
         provider: null,
@@ -2151,14 +2181,37 @@
         joinedAt: null,
         nickname: ""
       };
-      saveAuthState();
+      localStorage.removeItem(AUTH_KEY);
+
+      // 냉장고 식재료 전체 삭제
+      foods = [];
+      localStorage.removeItem(STORAGE_KEY);
+
+      // 메뉴 추천 AI 대화와 대화 맥락 삭제
+      chatMemory = {
+        lastFoods: [],
+        lastMeal: null
+      };
+      localStorage.removeItem(CHAT_KEY);
+      if (messages) {
+        messages.innerHTML = "";
+        addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
+      }
+
+      // 화면과 세션 상태 초기화
       sessionStorage.removeItem(SIGNUP_NUDGE_KEY);
       signupNudgeShown = false;
+      currentListFilter = "all";
+      if (fridgeWrap) fridgeWrap.classList.remove("open");
+      resetAddFoodForm();
+      render();
+      renderAccountUI();
+
       if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
       if (accountModal) accountModal.classList.remove("open");
-      renderAccountUI();
-      openToast("회원 탈퇴 완료");
-      setTimeout(() => openSignupModal(currentView, "withdrawn"), 120);
+
+      openToast("계정과 모든 기록이 삭제됐어요");
+      setTimeout(() => openSignupModal(currentView, "withdrawn"), 180);
     }
 
     function foodRowTemplate(food) {
@@ -2289,6 +2342,13 @@
 
     function addFood(event) {
       event.preventDefault();
+
+      if (isGuestUser()) {
+        openToast("회원가입이 필요한 기능이에요!");
+        openSignupModal("fridge", "feature");
+        return;
+      }
+
       const name = document.getElementById("foodName").value.trim();
       const category = document.getElementById("foodCategory").value;
       const storedDate = document.getElementById("foodStoredDate").value || todayValue();
@@ -2359,15 +2419,35 @@
     }
 
     function guessCategoryByName(name) {
-      const lower = name.toLowerCase();
-      if (["물", "주스", "음료", "탄산", "콜라", "사이다", "간장", "고추장", "된장", "케첩", "마요", "드레싱", "잼"].some(word => lower.includes(word))) return "음료/소스";
-      if (["계란", "달걀", "우유", "요거트", "치즈", "버터", "크림"].some(word => lower.includes(word))) return "유제품";
-      if (["닭", "돼지", "소고", "고기", "베이컨", "햄", "소시지", "스팸"].some(word => lower.includes(word))) return "육류";
-      if (["생선", "새우", "오징어", "연어", "고등어", "참치"].some(word => lower.includes(word))) return "해산물";
-      if (["만두", "냉동", "떡", "피자"].some(word => lower.includes(word))) return "냉동식품";
-      if (["사과", "바나나", "딸기", "귤", "포도", "복숭아", "키위", "레몬"].some(word => lower.includes(word))) return "과일";
-      if (["상추", "양배추", "양파", "파", "대파", "마늘", "오이", "토마토", "호박", "버섯", "감자", "당근", "브로콜리", "시금치", "콩나물", "숙주", "고추"].some(word => lower.includes(word))) return "채소";
-      return "기타";
+      const text = normalizeFoodText(name);
+      const rules = [
+        { category: "음료/소스", keywords: ["드레싱", "고추장", "사이다", "케첩", "마요네즈", "마요", "탄산", "간장", "된장", "주스", "콜라", "음료", "소스", "잼", "물"] },
+        { category: "유제품", keywords: ["요거트", "치즈", "버터", "크림", "계란", "달걀", "우유"] },
+        { category: "육류", keywords: ["닭가슴살", "돼지고기", "불고기", "소고기", "소시지", "베이컨", "닭고기", "스팸", "고기", "햄", "닭"] },
+        { category: "해산물", keywords: ["오징어", "고등어", "생선", "참치캔", "연어", "새우", "참치"] },
+        { category: "냉동식품", keywords: ["냉동만두", "냉동피자", "냉동", "만두", "피자"] },
+        { category: "과일", keywords: ["복숭아", "바나나", "딸기", "사과", "포도", "레몬", "키위", "귤"] },
+        { category: "채소", keywords: ["브로콜리", "콩나물", "시금치", "양배추", "양상추", "애호박", "고구마", "토마토", "대파", "양파", "상추", "마늘", "버섯", "감자", "당근", "숙주", "고추", "오이", "호박", "파"] },
+        { category: "기타", keywords: ["스파게티", "파스타", "식빵", "토스트", "라면", "국수", "떡", "면", "밥", "햇반"] }
+      ];
+
+      const candidates = [];
+      rules.forEach(rule => {
+        rule.keywords.forEach(keyword => {
+          const normalizedKeyword = normalizeFoodText(keyword);
+          if (text === normalizedKeyword) {
+            candidates.push({ category: rule.category, keyword, exact: true });
+          } else if (text.includes(normalizedKeyword)) {
+            candidates.push({ category: rule.category, keyword, exact: false });
+          }
+        });
+      });
+
+      candidates.sort((a, b) => {
+        if (a.exact !== b.exact) return a.exact ? -1 : 1;
+        return b.keyword.length - a.keyword.length;
+      });
+      return candidates[0]?.category || "기타";
     }
 
     function buildVirtualFood(name) {
@@ -2385,78 +2465,219 @@
 
     function buildMenuSuggestions(meal, sourceFoods = foods, count = 3) {
       const available = sortByUrgency(sourceFoods.length ? sourceFoods : foods);
-      const names = available.map(f => f.name);
-      const userProvided = available.some(f => f.isUserProvided);
-      const urgent = available.filter(f => !f.isUserProvided && typeof getDaysLeft(f.expiryDate) === "number" && getDaysLeft(f.expiryDate) <= 3).map(f => f.name);
-      const has = keyword => names.some(name => name.includes(keyword));
-      const categoryHas = category => available.some(f => f.category === category);
-      const pick = (index, fallback = "남은 재료") => names[index] || fallback;
-      const pickDifferent = (base, fallback = "채소나 밥") => names.find(name => name !== base) || fallback;
-      const listText = names.length ? names.slice(0, 4).join(", ") : "등록된 재료";
-      const urgentText = userProvided
-        ? "말해준 재료를 우선으로 쓸게요."
-        : urgent.length
-          ? `특히 ${urgent.slice(0, 3).join(", ")}부터 쓰면 좋아요.`
-          : "냉장고 재료 중 어울리는 것부터 가볍게 조합할게요.";
-
-      const ideas = [];
       const mealHint = meal.includes("아침") ? "아침" : meal.includes("점심") ? "점심" : meal.includes("저녁") ? "저녁" : "오늘";
-      const first = pick(0);
-      const second = pickDifferent(first);
+      const userProvided = available.some(food => food.isUserProvided);
+      const ideas = [];
 
-      if ((has("김치") && (has("밥") || has("햇반"))) || (has("김치") && (has("계란") || has("달걀")))) {
-        ideas.push({
-          title: `${mealHint} 메뉴 · 김치 계란 볶음밥`,
-          text: `김치를 먼저 볶고 ${has("계란") || has("달걀") ? "계란을 마지막에 넣어" : "밥을 넣어"} 마무리하세요. ${urgentText}`
-        });
-      }
+      const normalizedName = food => normalizeFoodText(food?.name);
+      const findFood = keywords => {
+        const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+        return available.find(food => {
+          const name = normalizedName(food);
+          return sortedKeywords.some(keyword => name === normalizeFoodText(keyword) || name.includes(normalizeFoodText(keyword)));
+        }) || null;
+      };
+      const findFoodsByCategory = category => available.filter(food => food.category === category);
+      const uniqueNames = list => [...new Set(list.filter(Boolean).map(food => food.name))];
+      const addIdea = (title, text) => {
+        if (!ideas.some(item => item.title === title)) ideas.push({ title, text });
+      };
 
-      if (has("계란") || has("달걀")) {
-        ideas.push({
-          title: `${mealHint} 메뉴 · 부드러운 계란 스크램블`,
-          text: `계란을 풀고 ${second}이 있으면 작게 썰어 같이 볶아보세요. 아침 요청이면 밥보다 토스트나 간단한 과일을 곁들이면 부담이 적습니다. ${urgentText}`
-        });
-      }
-
-      if (has("두부")) {
-        ideas.push({
-          title: `${mealHint} 메뉴 · 두부 구이 볼`,
-          text: `두부를 노릇하게 굽고 ${second}을 곁들여 간장·참기름으로 마무리하세요. 밥 위에 올리면 바로 한 그릇 메뉴가 됩니다.`
-        });
-      }
-
-      if (categoryHas("육류") || has("닭") || has("햄") || has("스팸")) {
-        ideas.push({
-          title: `${mealHint} 메뉴 · 단백질 빠른 볶음`,
-          text: `${first}와 ${second}을 팬에 볶고 간장이나 소금으로 간을 맞추세요. 밥, 면, 또띠아 중 있는 것에 얹으면 한 끼로 충분합니다.`
-        });
-      }
-
-      if (categoryHas("채소") || categoryHas("과일")) {
-        const greens = available.filter(f => f.category === "채소" || f.category === "과일").slice(0, 3).map(f => f.name).join(", ") || first;
-        ideas.push({
-          title: `${mealHint} 메뉴 · 가벼운 비빔볼`,
-          text: `${greens}을 중심으로 그릇에 담고, 계란·두부·고기류가 있으면 같이 올려주세요. 드레싱은 간장+참기름 또는 소금+올리브오일 느낌이면 충분합니다.`
-        });
-      }
-
-      if (has("만두") || has("라면") || has("면")) {
-        ideas.push({
-          title: `${mealHint} 메뉴 · 냉장고 털이 국물 메뉴`,
-          text: `${first}에 ${second}을 더해 국물이나 면 메뉴로 만들면 빠릅니다. 야채가 있으면 마지막에 넣어 식감을 살려주세요.`
-        });
-      }
-
-      ideas.push({
-        title: `${mealHint} 메뉴 · ${listText} 빠른 볶음`,
-        text: `${listText} 중 바로 익는 재료부터 팬에 넣고 볶아보세요. 양념은 간장+마늘+참기름 조합이면 대체로 안전합니다.`
+      const urgentFoods = available.filter(food => {
+        if (food.isUserProvided) return false;
+        const days = getDaysLeft(food.expiryDate);
+        return typeof days === "number" && days <= 3;
       });
+      const urgentNote = userProvided
+        ? "말해준 재료를 우선해서 구성했어요."
+        : urgentFoods.length
+          ? `${urgentFoods.slice(0, 3).map(food => food.name).join(", ")}부터 사용하면 좋아요.`
+          : "등록된 재료 중 조리 궁합이 좋은 것부터 골랐어요.";
 
-      const unique = [];
-      ideas.forEach(item => {
-        if (!unique.some(saved => saved.title === item.title)) unique.push(item);
-      });
-      return unique.slice(0, count);
+      const bulgogi = findFood(["불고기"]);
+      const beef = findFood(["소고기", "쇠고기"]);
+      const pork = findFood(["돼지고기", "삼겹살", "목살"]);
+      const chicken = findFood(["닭가슴살", "닭고기", "닭"]);
+      const ham = findFood(["소시지", "베이컨", "스팸", "햄"]);
+      const fish = findFood(["연어", "고등어", "생선", "참치", "새우", "오징어"]);
+      const tofu = findFood(["두부"]);
+      const egg = findFood(["계란", "달걀"]);
+      const kimchi = findFood(["김치"]);
+      const rice = findFood(["햇반", "밥"]);
+      const pasta = findFood(["스파게티", "파스타"]);
+      const noodles = findFood(["라면", "국수", "우동", "면"]);
+      const bread = findFood(["식빵", "토스트", "빵", "또띠아"]);
+      const dumpling = findFood(["만두"]);
+      const milk = findFood(["우유"]);
+      const cheese = findFood(["치즈"]);
+      const butter = findFood(["버터"]);
+      const vegetables = findFoodsByCategory("채소");
+      const vegetableNames = uniqueNames(vegetables).slice(0, 3);
+      const vegetableText = vegetableNames.length ? vegetableNames.join(", ") : "양파나 대파 같은 채소";
+
+      // 가장 구체적인 주재료부터 판단한다. 음료·소스는 단독 볶음 재료로 사용하지 않는다.
+      if (bulgogi) {
+        if (rice) {
+          addIdea(
+            `${mealHint} 메뉴 · 불고기 덮밥`,
+            `${withJosa(bulgogi.name, "을/를")} 따뜻하게 볶아 ${withJosa(rice.name, "위에/위에")} 올리세요. ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 함께 볶으면 식감이 좋아요.` : "계란이나 김가루가 있으면 곁들여도 좋아요."} ${urgentNote}`
+          );
+        } else {
+          addIdea(
+            `${mealHint} 메뉴 · 불고기 볶음`,
+            `${withJosa(bulgogi.name, "을/를")} 팬에 먼저 익히고 ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 넣어` : "물을 한두 숟갈 넣어"} 촉촉하게 볶으세요. 밥이 있다면 덮밥으로 먹기 좋습니다. ${urgentNote}`
+          );
+        }
+
+        if (noodles || pasta) {
+          const carb = noodles || pasta;
+          addIdea(
+            `${mealHint} 메뉴 · 불고기 볶음면`,
+            `${withJosa(bulgogi.name, "과/와")} 삶은 ${withJosa(carb.name, "을/를")} 함께 볶고 간장으로 가볍게 간하세요. 우유는 볶지 말고 음료로 곁들이는 편이 자연스럽습니다.`
+          );
+        } else {
+          addIdea(
+            `${mealHint} 메뉴 · 불고기 덮밥`,
+            `${withJosa(bulgogi.name, "을/를")} 충분히 익힌 뒤 밥이 있다면 밥 위에 올려 덮밥으로 드세요. 냉장고에 우유가 있어도 불고기와 함께 볶지 않고 따로 마시는 편이 좋습니다.`
+          );
+        }
+      }
+
+      if (kimchi && rice) {
+        addIdea(
+          `${mealHint} 메뉴 · 김치볶음밥`,
+          `${withJosa(kimchi.name, "을/를")} 먼저 볶은 뒤 ${withJosa(rice.name, "을/를")} 넣으세요. ${egg ? `${withJosa(egg.name, "을/를")} 마지막에 올리면 한 끼가 더 든든해집니다.` : "참기름이나 김가루가 있으면 마무리해도 좋아요."}`
+        );
+      }
+
+      if (kimchi && tofu) {
+        addIdea(
+          `${mealHint} 메뉴 · 두부김치`,
+          `${withJosa(tofu.name, "을/를")} 데우거나 노릇하게 굽고, ${withJosa(kimchi.name, "을/를")} 따로 볶아 곁들이세요. 두 재료를 한 팬에서 무작정 섞기보다 따로 조리하면 맛이 안정적입니다.`
+        );
+      }
+
+      if (pasta) {
+        if (milk || cheese || butter) {
+          const creamy = uniqueNames([milk, cheese, butter]).join(", ");
+          addIdea(
+            `${mealHint} 메뉴 · 간단 크림 파스타`,
+            `${withJosa(pasta.name, "을/를")} 삶고 ${creamy || "우유나 치즈"}로 소스를 만드세요. 우유는 이처럼 파스타 소스에 사용할 때 자연스럽고, 고기와 바로 볶는 방식은 피하는 게 좋아요.`
+          );
+        } else if (findFood(["토마토"])) {
+          addIdea(
+            `${mealHint} 메뉴 · 토마토 파스타`,
+            `${withJosa(pasta.name, "을/를")} 삶고 토마토를 으깨 소스로 볶아 섞으세요. 마늘이나 양파가 있다면 먼저 볶으면 풍미가 좋아집니다.`
+          );
+        } else {
+          addIdea(
+            `${mealHint} 메뉴 · 채소 오일 파스타`,
+            `${withJosa(pasta.name, "을/를")} 삶은 뒤 ${withJosa(vegetableText, "을/를")} 볶아 함께 섞으세요. 소금·마늘·기름 정도로 간단하게 마무리할 수 있습니다.`
+          );
+        }
+      }
+
+      if (egg) {
+        if (rice) {
+          addIdea(
+            `${mealHint} 메뉴 · 계란볶음밥`,
+            `${withJosa(egg.name, "을/를")} 먼저 부드럽게 익힌 뒤 ${withJosa(rice.name, "을/를")} 넣고 볶으세요. ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 잘게 썰어 넣어도 좋아요.` : "간장은 팬 가장자리에 조금만 둘러주세요."}`
+          );
+        } else if (bread) {
+          addIdea(
+            `${mealHint} 메뉴 · 계란 토스트`,
+            `${withJosa(egg.name, "을/를")} 익혀 ${withJosa(bread.name, "에/에")} 올리세요. ${milk ? "우유는 계란물에 한두 숟갈만 넣으면 더 부드러워집니다." : "치즈나 채소가 있으면 함께 넣어도 좋아요."}`
+          );
+        } else {
+          addIdea(
+            `${mealHint} 메뉴 · 채소 계란말이`,
+            `${withJosa(egg.name, "을/를")} 풀고 ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 잘게 썰어 넣어` : "소금으로 가볍게 간해"} 천천히 말아 익히세요. ${milk ? "우유는 계란물에 소량만 넣을 수 있어요." : ""}`
+          );
+        }
+      }
+
+      if (tofu) {
+        if (rice) {
+          addIdea(
+            `${mealHint} 메뉴 · 두부 덮밥`,
+            `${withJosa(tofu.name, "을/를")} 노릇하게 구운 뒤 간장 양념을 입혀 ${withJosa(rice.name, "위에/위에")} 올리세요. 채소가 있다면 옆에서 함께 볶아 곁들이면 됩니다.`
+          );
+        } else {
+          addIdea(
+            `${mealHint} 메뉴 · 두부구이`,
+            `${withJosa(tofu.name, "을/를")} 물기를 닦아 노릇하게 굽고 간장·참기름 양념을 곁들이세요. ${vegetableNames.length ? `${withJosa(vegetableText, "과/와")} 함께 먹으면 균형이 좋아요.` : ""}`
+          );
+        }
+      }
+
+      const plainProtein = beef || pork || chicken || ham;
+      if (plainProtein && !bulgogi) {
+        const proteinLabel = plainProtein.name;
+        if (rice) {
+          addIdea(
+            `${mealHint} 메뉴 · ${proteinLabel} 덮밥`,
+            `${withJosa(proteinLabel, "을/를")} 충분히 익혀 ${vegetableNames.length ? `${withJosa(vegetableText, "과/와")} 함께 볶고` : "간장으로 간한 뒤"} ${withJosa(rice.name, "위에/위에")} 올리세요.`
+          );
+        }
+        addIdea(
+          `${mealHint} 메뉴 · ${proteinLabel} 채소볶음`,
+          `${withJosa(proteinLabel, "을/를")} 먼저 익힌 뒤 ${withJosa(vegetableText, "을/를")} 넣고 볶으세요. 우유·주스 같은 음료는 조리 재료에서 제외하고 따로 곁들이세요.`
+        );
+      }
+
+      if (fish) {
+        addIdea(
+          `${mealHint} 메뉴 · ${fish.name} 구이`,
+          `${withJosa(fish.name, "을/를")} 팬이나 에어프라이어에 익히고 ${rice ? `${withJosa(rice.name, "과/와")} 함께` : "채소와 함께"} 드세요. 생선류는 다른 재료와 무작정 볶기보다 따로 익히는 편이 안전합니다.`
+        );
+      }
+
+      if (dumpling) {
+        addIdea(
+          `${mealHint} 메뉴 · 만두국 또는 군만두`,
+          `국물이 당기면 ${withJosa(dumpling.name, "을/를")} 물에 끓이고, 빠르게 먹고 싶으면 팬에 굽거나 에어프라이어로 익히세요. 계란이나 대파가 있으면 만두국에 넣기 좋습니다.`
+        );
+      }
+
+      if (noodles && !pasta) {
+        addIdea(
+          `${mealHint} 메뉴 · 냉장고 털이 면 요리`,
+          `${withJosa(noodles.name, "을/를")} 끓이거나 삶고 ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 넣어` : "계란이나 김치를 곁들여"} 완성하세요. 음료는 면과 함께 볶지 않습니다.`
+        );
+      }
+
+      // 구체적인 조합이 없을 때도 음료를 주재료로 선택하지 않는다.
+      if (!ideas.length) {
+        const cookingCandidates = available.filter(food => food.category !== "음료/소스" && !["우유", "주스", "물", "콜라", "사이다"].some(term => normalizedName(food).includes(term)));
+        const main = cookingCandidates[0] || available[0];
+        if (main?.category === "채소" || main?.category === "과일") {
+          addIdea(
+            `${mealHint} 메뉴 · ${main.name} 샐러드 또는 구이`,
+            `${withJosa(main.name, "을/를")} 생으로 먹을 수 있으면 샐러드로, 익혀야 한다면 팬이나 오븐에 구워 드세요. 단백질 재료가 있다면 곁들이면 더 든든합니다.`
+          );
+        } else if (main) {
+          addIdea(
+            `${mealHint} 메뉴 · ${main.name} 중심 한 그릇`,
+            `${withJosa(main.name, "을/를")} 재료 특성에 맞게 굽거나 끓여 조리하세요. 등록된 음료·소스는 주재료로 볶지 않고 간이나 곁들임으로만 사용합니다.`
+          );
+        }
+      }
+
+      // 추천 개수가 부족하면 이미 확인된 주재료의 자연스러운 변형만 추가한다.
+      if (ideas.length < count && bulgogi) {
+        addIdea(
+          `${mealHint} 메뉴 · 불고기 상추쌈`,
+          `${withJosa(bulgogi.name, "을/를")} 볶아 상추나 양배추가 있다면 싸서 드세요. 채소가 없다면 불고기만 익혀 반찬으로 먹어도 됩니다.`
+        );
+      }
+      if (ideas.length < count && plainProtein && rice) {
+        addIdea(
+          `${mealHint} 메뉴 · ${plainProtein.name} 볶음밥`,
+          `${withJosa(plainProtein.name, "을/를")} 잘게 썰어 충분히 익힌 뒤 ${withJosa(rice.name, "을/를")} 넣고 볶으세요. 채소는 잘게 썰어 소량만 넣으면 됩니다.`
+        );
+      }
+
+      return ideas.slice(0, count);
     }
 
     function detectMeal(text) {
@@ -2482,7 +2703,7 @@
     const knownFoodNames = [
       "계란", "달걀", "김치", "밥", "햇반", "두부", "우유", "요거트", "치즈", "버터",
       "식빵", "토스트", "베이컨", "햄", "소시지", "스팸", "닭가슴살", "닭고기", "닭",
-      "돼지고기", "소고기", "고기", "참치", "참치캔", "고등어", "연어", "새우", "오징어", "생선",
+      "돼지고기", "소고기", "불고기", "고기", "참치", "참치캔", "고등어", "연어", "새우", "오징어", "생선",
       "양파", "대파", "파", "마늘", "감자", "고구마", "당근", "애호박", "호박", "버섯",
       "양배추", "양상추", "상추", "토마토", "오이", "브로콜리", "시금치", "콩나물", "숙주", "고추",
       "사과", "바나나", "딸기", "귤", "포도", "레몬", "라면", "만두", "떡", "면", "파스타"
@@ -2498,7 +2719,8 @@
     }
 
     function hasKnownFoodMention(text) {
-      return foods.some(food => text.includes(food.name)) || knownFoodNames.some(name => text.includes(name));
+      const vocabulary = [...foods.map(food => food.name), ...knownFoodNames];
+      return vocabulary.some(name => containsDistinctFoodTerm(text, name, vocabulary));
     }
 
     function isCasualOrComplaint(text) {
@@ -2510,12 +2732,14 @@
     function extractRequestedFoods(text, allowLoose = false) {
       const found = [];
 
+      const savedFoodVocabulary = [...foods.map(food => food.name), ...knownFoodNames];
       foods.forEach(food => {
-        if (text.includes(food.name) && !found.some(item => item.name === food.name)) found.push(food);
+        if (containsDistinctFoodTerm(text, food.name, savedFoodVocabulary) && !found.some(item => item.name === food.name)) found.push(food);
       });
 
-      knownFoodNames.forEach(name => {
-        if (text.includes(name) && !found.some(item => item.name === name)) {
+      const sortedKnownFoodNames = [...knownFoodNames].sort((a, b) => b.length - a.length);
+      sortedKnownFoodNames.forEach(name => {
+        if (containsDistinctFoodTerm(text, name, sortedKnownFoodNames) && !found.some(item => item.name === name || item.name.includes(name) || name.includes(item.name))) {
           const saved = foods.find(food => food.name === name || food.name.includes(name) || name.includes(food.name));
           found.push(saved || buildVirtualFood(name));
         }
@@ -2622,6 +2846,14 @@
       const input = document.getElementById("chatInput");
       const text = input.value.trim();
       if (!text) return;
+
+      if (isGuestUser()) {
+        input.value = "";
+        addMessage("bot", "회원가입이 필요한 기능이에요!");
+        openSignupModal("menu", "feature");
+        return;
+      }
+
       addMessage("user", text);
       input.value = "";
       setTimeout(() => addMessage("bot", botReply(text)), 260);
