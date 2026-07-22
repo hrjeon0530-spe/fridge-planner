@@ -1097,6 +1097,13 @@
     .provider-btn.naver { background: #03c75a; color: white; border-color: rgba(3,199,90,0.35); }
     .provider-btn.kakao { background: #fee500; color: #3a2d20; border-color: rgba(254,229,0,0.42); }
 
+    .provider-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      filter: grayscale(0.35);
+      box-shadow: none;
+    }
+
     .signup-note {
       padding: 14px 16px;
       border-radius: 18px;
@@ -1671,20 +1678,20 @@
       <div class="modal-head">
         <div>
           <h2 id="signupTitle">잠시만요!</h2>
-          <div class="muted" id="signupSubtitle">회원가입을 하지 않아 기록 저장이 되지 않을 수 있어요.</div>
+          <div class="muted" id="signupSubtitle">로그인하지 않으면 냉장고 기록을 저장할 수 없어요.</div>
         </div>
         <button class="close-btn" id="closeSignupBtn" type="button">×</button>
       </div>
-      <p class="signup-copy" id="signupMessage">회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.</p>
+      <p class="signup-copy" id="signupMessage">Google로 로그인하면 기기를 바꿔도 같은 계정의 냉장고 기록을 이어서 볼 수 있습니다.</p>
       <div class="provider-grid provider-only-actions" aria-label="회원가입 경로 선택">
-        <button class="provider-btn google" type="button" data-provider="Google">🔎 Google로 가입</button>
-        <button class="provider-btn naver" type="button" data-provider="Naver">N Naver로 가입</button>
-        <button class="provider-btn kakao" type="button" data-provider="Kakao">💬 Kakao로 가입</button>
+        <button class="provider-btn google" type="button" data-provider="Google">🔎 Google로 계속하기</button>
+        <button class="provider-btn naver" type="button" disabled aria-disabled="true">N Naver 준비 중</button>
+        <button class="provider-btn kakao" type="button" disabled aria-disabled="true">💬 Kakao 준비 중</button>
       </div>
       <div class="form-actions">
         <button class="ghost-btn" id="skipSignupBtn" type="button">나중에 할게요</button>
       </div>
-      <div class="signup-note">현재 버튼은 소셜 로그인 흐름을 확인하는 데모입니다. 버튼을 누르면 바로 가입된 상태로 전환되며, 실제 배포 시에는 각 로그인 제공자의 인증 화면으로 연결됩니다.</div>
+      <div class="signup-note">Google 로그인은 실제 Google 계정과 연결됩니다. Naver·Kakao 로그인은 현재 준비 중입니다.</div>
     </div>
   </div>
 
@@ -1746,18 +1753,23 @@
 
   <div class="toast" id="toast"></div>
 
-  <script>
-    const STORAGE_KEY = "fridge-survival-tabs-v4";
-    const AUTH_KEY = "fridge-survival-auth-v1";
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient('https://fopxiisxefrbffnkjrfp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvcHhpaXN4ZWZyYmZmbmtqcmZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MzAxMzIsImV4cCI6MjA5OTIwNjEzMn0.JtbeknQ1O6hCLQQoyajBK4ypdqK_QwfjvOlPLCV5emU');
+    // Supabase 세션과 데이터베이스를 회원·냉장고 데이터의 유일한 기준으로 사용합니다.
+    const LEGACY_STORAGE_KEY = "fridge-survival-tabs-v4";
+    const LEGACY_AUTH_KEY = "fridge-survival-auth-v1";
     const SIGNUP_NUDGE_KEY = "fridge-survival-signup-nudge-v1";
     const CHAT_KEY = "fridge-survival-chat-v1";
-    let foods = loadFoods();
-    let authState = loadAuthState();
+    let foods = [];
+    let currentSession = null;
+    let authState = createGuestAuthState();
     let currentView = "home";
     let currentListFilter = "all";
     let draggedId = null;
     let pendingView = null;
     let signupNudgeShown = sessionStorage.getItem(SIGNUP_NUDGE_KEY) === "1";
+    let sessionApplySequence = 0;
 
     const tabs = document.querySelectorAll(".tab-btn");
     const views = {
@@ -1802,12 +1814,6 @@
     const eggKeywords = ["계란", "달걀", "egg"];
     const doorKeywords = ["물", "주스", "음료", "탄산", "콜라", "사이다", "우유", "소스", "간장", "고추장", "된장", "케첩", "마요", "드레싱", "잼"];
 
-
-    foods = foods.map(food => ({
-      ...food,
-      storedDate: food.storedDate || (food.createdAt ? localDateFromTimestamp(food.createdAt) : todayValue()),
-      expiryDate: food.expiryDate || ""
-    }));
 
     function normalizeFoodText(value) {
       return String(value || "").trim().toLowerCase();
@@ -1878,23 +1884,20 @@
       return formatLocalDate(new Date());
     }
 
-    function loadAuthState() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(AUTH_KEY));
-        return saved ? {
-          registered: Boolean(saved.registered),
-          provider: saved.provider || null,
-          joinedAt: saved.joinedAt || null,
-          nickname: saved.nickname || "",
-          email: saved.email || ""
-        } : { registered: false, provider: null, joinedAt: null, nickname: "", email: "" };
-      } catch (error) {
-        return { registered: false, provider: null, joinedAt: null, nickname: "", email: "" };
-      }
+    function createGuestAuthState() {
+      return {
+        registered: false,
+        provider: null,
+        joinedAt: null,
+        nickname: "",
+        email: "",
+        userId: null
+      };
     }
 
-    function saveAuthState() {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(authState));
+    function clearLegacyBrowserState() {
+      localStorage.removeItem(LEGACY_AUTH_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
     }
 
     function hasNickname() {
@@ -1919,7 +1922,85 @@
     }
 
     function isGuestUser() {
-      return !authState || !authState.registered;
+      return !currentSession?.user;
+    }
+
+    function getProviderLabel(user) {
+      const provider = user?.app_metadata?.provider || user?.app_metadata?.providers?.[0] || "google";
+      const labels = { google: "Google", kakao: "Kakao", naver: "Naver", email: "이메일" };
+      return labels[provider] || provider;
+    }
+
+    function mapFoodRow(row) {
+      return {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        storedDate: row.stored_date || "",
+        expiryDate: row.expiry_date || "",
+        location: row.location || "middle",
+        createdAt: row.created_at
+      };
+    }
+
+    async function loadFoodsFromDatabase() {
+      if (isGuestUser()) {
+        foods = [];
+        render();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("foods")
+        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("식재료 조회 실패", error);
+        foods = [];
+        render();
+        openToast("냉장고 데이터를 불러오지 못했어요. Supabase 테이블·RLS 설정을 확인해 주세요.");
+        return;
+      }
+
+      foods = (data || []).map(mapFoodRow);
+      render();
+    }
+
+    async function applySupabaseSession(session, { resetConversation = false } = {}) {
+      const sequence = ++sessionApplySequence;
+      currentSession = session;
+      const user = session?.user;
+
+      if (!user) {
+        authState = createGuestAuthState();
+        foods = [];
+        if (resetConversation && messages) {
+          messages.innerHTML = "";
+          addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
+        }
+        renderAccountUI();
+        render();
+        return;
+      }
+
+      authState = {
+        registered: true,
+        provider: getProviderLabel(user),
+        email: user.email || "",
+        joinedAt: user.created_at || null,
+        nickname: user.user_metadata?.nickname || user.user_metadata?.full_name || "",
+        userId: user.id
+      };
+
+      renderAccountUI();
+      await loadFoodsFromDatabase();
+      if (sequence !== sessionApplySequence) return;
+
+      if (resetConversation && messages) {
+        messages.innerHTML = "";
+        addMessage("bot", buildWelcomeMessage());
+      }
     }
 
     function formatDateLabel(value) {
@@ -1935,19 +2016,6 @@
       addFoodForm.reset();
       document.getElementById("foodStoredDate").value = todayValue();
       document.getElementById("foodLocation").value = "auto";
-    }
-
-    function loadFoods() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        return saved ? JSON.parse(saved) : [];
-      } catch (error) {
-        return [];
-      }
-    }
-
-    function saveFoods() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(foods));
     }
 
     function uid() {
@@ -2074,15 +2142,15 @@
       if (reason === "withdrawn") {
         if (titleEl) titleEl.textContent = "다시 가입하시겠어요?";
         if (subtitleEl) subtitleEl.textContent = "회원 탈퇴가 완료되어 현재는 게스트 상태예요.";
-        if (messageEl) messageEl.textContent = "계정과 냉장고·대화 기록이 모두 삭제됐어요. 다시 이용하려면 Google·Naver·Kakao 중 하나로 가입해 주세요.";
+        if (messageEl) messageEl.textContent = "계정과 냉장고·대화 기록이 모두 삭제됐어요. 다시 이용하려면 Google로 가입해 주세요.";
       } else if (reason === "feature") {
         if (titleEl) titleEl.textContent = "회원가입이 필요한 기능이에요!";
         if (subtitleEl) subtitleEl.textContent = "식재료 저장과 메뉴 추천 AI는 회원가입 후 사용할 수 있어요.";
-        if (messageEl) messageEl.textContent = "Google·Naver·Kakao 중 하나를 선택하면 바로 가입된 상태로 전환됩니다.";
+        if (messageEl) messageEl.textContent = "Google 버튼을 누르면 실제 Google 로그인 화면으로 이동합니다. Naver·Kakao는 준비 중입니다.";
       } else {
         if (titleEl) titleEl.textContent = "잠시만요!";
-        if (subtitleEl) subtitleEl.textContent = "회원가입을 하지 않아 기록 저장이 되지 않을 수 있어요.";
-        if (messageEl) messageEl.textContent = "회원가입을 하면 기기를 바꿔도 냉장고 기록을 이어서 볼 수 있고, 추천 기록도 더 안정적으로 저장됩니다.";
+        if (subtitleEl) subtitleEl.textContent = "로그인하지 않으면 냉장고 기록을 저장할 수 없어요.";
+        if (messageEl) messageEl.textContent = "Google로 로그인하면 기기를 바꿔도 같은 계정의 냉장고 기록을 이어서 볼 수 있습니다.";
       }
 
       signupModal.classList.add("open");
@@ -2095,21 +2163,6 @@
       if (continueNavigation && targetView) {
         setView(targetView, true);
       }
-    }
-
-    function completeSignup(provider) {
-      authState = {
-        ...authState,
-        registered: true,
-        provider,
-        email: "",
-        joinedAt: authState.joinedAt || new Date().toISOString(),
-        nickname: authState.nickname || ""
-      };
-      saveAuthState();
-      renderAccountUI();
-      closeSignupModal(true);
-      openToast(`${provider} 계정 연결 완료`);
     }
 
     function renderAccountUI() {
@@ -2131,9 +2184,9 @@
         ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
         : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
       if (withdrawBtn) {
-        withdrawBtn.disabled = isGuestUser();
-        withdrawBtn.style.opacity = isGuestUser() ? "0.55" : "";
-        withdrawBtn.textContent = isGuestUser() ? "가입 안내 보기" : "회원 탈퇴";
+        withdrawBtn.disabled = false;
+        withdrawBtn.style.opacity = "";
+        withdrawBtn.textContent = isGuestUser() ? "회원가입 안내" : "회원 탈퇴";
       }
     }
 
@@ -2146,15 +2199,29 @@
       accountModal.classList.remove("open");
     }
 
-    function saveNicknameFromAccountInput(showToast = false) {
+    async function saveNicknameFromAccountInput(showToast = false) {
+      if (isGuestUser()) {
+        openSignupModal(currentView, "feature");
+        return;
+      }
+
       const nickname = document.getElementById("accountNickname").value.trim();
-      authState = {
-        ...authState,
-        nickname
-      };
-      saveAuthState();
+      const { data, error } = await supabase.auth.updateUser({
+        data: { nickname }
+      });
+
+      if (error) {
+        console.error("닉네임 저장 실패", error);
+        openToast("닉네임을 저장하지 못했어요.");
+        return;
+      }
+
+      if (data?.user && currentSession) {
+        currentSession = { ...currentSession, user: data.user };
+      }
+      authState.nickname = nickname;
       renderAccountUI();
-      if (showToast) openToast(nickname ? `${nickname} 닉네임 저장 완료` : "닉네임 없이 저장 완료");
+      if (showToast) openToast(nickname ? `${nickname} 닉네임 저장 완료` : "닉네임을 비웠어요");
     }
 
     function withdrawAccount() {
@@ -2173,46 +2240,55 @@
       withdrawConfirmModal.classList.remove("open");
     }
 
-    function completeWithdrawAccount() {
-      // 계정 정보 초기화
-      authState = {
-        registered: false,
-        provider: null,
-        email: null,
-        joinedAt: null,
-        nickname: ""
-      };
-      localStorage.removeItem(AUTH_KEY);
-
-      // 냉장고 식재료 전체 삭제
-      foods = [];
-      localStorage.removeItem(STORAGE_KEY);
-
-      // 메뉴 추천 AI 대화와 대화 맥락 삭제
-      chatMemory = {
-        lastFoods: [],
-        lastMeal: null
-      };
-      localStorage.removeItem(CHAT_KEY);
-      if (messages) {
-        messages.innerHTML = "";
-        addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
+    async function completeWithdrawAccount() {
+      if (isGuestUser()) {
+        closeWithdrawConfirmModal();
+        openSignupModal(currentView, "feature");
+        return;
       }
 
-      // 화면과 세션 상태 초기화
-      sessionStorage.removeItem(SIGNUP_NUDGE_KEY);
-      signupNudgeShown = false;
-      currentListFilter = "all";
-      if (fridgeWrap) fridgeWrap.classList.remove("open");
-      resetAddFoodForm();
-      render();
-      renderAccountUI();
+      const confirmButton = document.getElementById("confirmWithdrawBtn");
+      confirmButton.disabled = true;
+      confirmButton.textContent = "탈퇴 처리 중...";
 
-      if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
-      if (accountModal) accountModal.classList.remove("open");
+      try {
+        const { error } = await supabase.functions.invoke("delete-account", {
+          body: { confirmation: "DELETE_MY_ACCOUNT" }
+        });
 
-      openToast("계정과 모든 기록이 삭제됐어요");
-      setTimeout(() => openSignupModal(currentView, "withdrawn"), 180);
+        if (error) throw error;
+
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        currentSession = null;
+        authState = createGuestAuthState();
+        foods = [];
+        chatMemory = { lastFoods: [], lastMeal: null };
+        localStorage.removeItem(CHAT_KEY);
+        clearLegacyBrowserState();
+
+        if (messages) {
+          messages.innerHTML = "";
+          addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
+        }
+
+        sessionStorage.removeItem(SIGNUP_NUDGE_KEY);
+        signupNudgeShown = false;
+        currentListFilter = "all";
+        if (fridgeWrap) fridgeWrap.classList.remove("open");
+        resetAddFoodForm();
+        closeWithdrawConfirmModal();
+        closeAccountModal();
+        renderAccountUI();
+        render();
+        openToast("계정과 모든 기록이 삭제됐어요");
+        setTimeout(() => openSignupModal(currentView, "withdrawn"), 180);
+      } catch (error) {
+        console.error("회원 탈퇴 실패", error);
+        openToast("회원 탈퇴에 실패했어요. delete-account Edge Function 배포 여부를 확인해 주세요.");
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = "탈퇴하기";
+      }
     }
 
     function foodRowTemplate(food) {
@@ -2341,7 +2417,7 @@
       });
     }
 
-    function addFood(event) {
+    async function addFood(event) {
       event.preventDefault();
 
       if (isGuestUser()) {
@@ -2353,13 +2429,31 @@
       const name = document.getElementById("foodName").value.trim();
       const category = document.getElementById("foodCategory").value;
       const storedDate = document.getElementById("foodStoredDate").value || todayValue();
-      const expiryDate = document.getElementById("foodExpiry").value || "";
+      const expiryDate = document.getElementById("foodExpiry").value || null;
       const selectedLocation = document.getElementById("foodLocation").value;
       if (!name || !category) return;
 
       const location = selectedLocation === "auto" ? resolveAutoLocation(name, category) : selectedLocation;
-      foods.push({ id: uid(), name, category, storedDate, expiryDate, location, createdAt: new Date().toISOString() });
-      saveFoods();
+      const { data, error } = await supabase
+        .from("foods")
+        .insert({
+          user_id: currentSession.user.id,
+          name,
+          category,
+          stored_date: storedDate,
+          expiry_date: expiryDate,
+          location
+        })
+        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .single();
+
+      if (error) {
+        console.error("식재료 추가 실패", error);
+        openToast("식재료를 저장하지 못했어요.");
+        return;
+      }
+
+      foods.push(mapFoodRow(data));
       resetAddFoodForm();
       fridgeWrap.classList.add("open");
       render();
@@ -2384,38 +2478,77 @@
       editModal.classList.remove("open");
     }
 
-    function updateFood(event) {
+    async function updateFood(event) {
       event.preventDefault();
+      if (isGuestUser()) return;
+
       const id = document.getElementById("editId").value;
       const food = foods.find(item => item.id === id);
       if (!food) return;
-      food.name = document.getElementById("editName").value.trim();
-      food.category = document.getElementById("editCategory").value;
-      food.storedDate = document.getElementById("editStoredDate").value || todayValue();
-      food.expiryDate = document.getElementById("editExpiry").value || "";
-      food.location = document.getElementById("editLocation").value;
-      saveFoods();
+
+      const updates = {
+        name: document.getElementById("editName").value.trim(),
+        category: document.getElementById("editCategory").value,
+        stored_date: document.getElementById("editStoredDate").value || todayValue(),
+        expiry_date: document.getElementById("editExpiry").value || null,
+        location: document.getElementById("editLocation").value
+      };
+
+      const { data, error } = await supabase
+        .from("foods")
+        .update(updates)
+        .eq("id", id)
+        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .single();
+
+      if (error) {
+        console.error("식재료 수정 실패", error);
+        openToast("수정 내용을 저장하지 못했어요.");
+        return;
+      }
+
+      const index = foods.findIndex(item => item.id === id);
+      if (index >= 0) foods[index] = mapFoodRow(data);
       render();
       closeEditModal();
       openToast("수정 완료");
     }
 
-    function deleteEditingFood() {
+    async function deleteEditingFood() {
+      if (isGuestUser()) return;
       const id = document.getElementById("editId").value;
       const food = foods.find(item => item.id === id);
+
+      const { error } = await supabase.from("foods").delete().eq("id", id);
+      if (error) {
+        console.error("식재료 삭제 실패", error);
+        openToast("식재료를 삭제하지 못했어요.");
+        return;
+      }
+
       foods = foods.filter(item => item.id !== id);
-      saveFoods();
       render();
       closeEditModal();
       openToast(food ? `${food.name} 삭제 완료` : "삭제 완료");
     }
 
-    function moveFoodToLocation(id, location) {
+    async function moveFoodToLocation(id, location) {
+      if (isGuestUser()) return;
       const food = foods.find(item => item.id === id);
       if (!food) return;
+
+      const previousLocation = food.location;
       food.location = location;
-      saveFoods();
       render();
+
+      const { error } = await supabase.from("foods").update({ location }).eq("id", id);
+      if (error) {
+        console.error("위치 이동 실패", error);
+        food.location = previousLocation;
+        render();
+        openToast("위치를 저장하지 못했어요.");
+        return;
+      }
       openToast(`${food.name} → ${locationNames[location]} 이동`);
     }
 
@@ -2921,8 +3054,17 @@
     signupModal.addEventListener("click", (event) => {
       if (event.target === signupModal) closeSignupModal(true);
     });
-    document.querySelectorAll("[data-provider]").forEach(btn => {
-      btn.addEventListener("click", () => completeSignup(btn.dataset.provider));
+    const googleLoginButton = document.querySelector('[data-provider="Google"]');
+    googleLoginButton?.addEventListener("click", async () => {
+      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo }
+      });
+      if (error) {
+        console.error("Google 로그인 실패", error);
+        openToast(`Google 로그인 실패: ${error.message}`);
+      }
     });
 
     document.getElementById("openAccountBtn").addEventListener("click", openAccountModal);
@@ -2930,11 +3072,12 @@
     accountModal.addEventListener("click", (event) => {
       if (event.target === accountModal) closeAccountModal();
     });
-    document.getElementById("accountNickname").addEventListener("input", () => saveNicknameFromAccountInput(false));
-    document.getElementById("accountNickname").addEventListener("blur", () => saveNicknameFromAccountInput(false));
+    document.getElementById("accountNickname").addEventListener("blur", () => {
+      void saveNicknameFromAccountInput(true);
+    });
     document.getElementById("accountForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      saveNicknameFromAccountInput(false);
+      void saveNicknameFromAccountInput(true);
     });
     document.getElementById("withdrawAccountBtn").addEventListener("click", withdrawAccount);
     document.getElementById("confirmWithdrawBtn").addEventListener("click", completeWithdrawAccount);
@@ -2946,8 +3089,31 @@
 
     chatForm.addEventListener("submit", handleChat);
     resetAddFoodForm();
+
+    /* Supabase 세션을 회원 판단의 유일한 기준으로 사용 */
+    clearLegacyBrowserState();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error("세션 확인 실패", sessionError);
+      openToast("로그인 상태를 확인하지 못했어요.");
+    }
+
+    await applySupabaseSession(session);
+    if (messages && !messages.children.length) {
+      addMessage("bot", isGuestUser()
+        ? "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요."
+        : buildWelcomeMessage());
+    }
+
+    supabase.auth.onAuthStateChange((event, nextSession) => {
+      setTimeout(() => {
+        void applySupabaseSession(nextSession, {
+          resetConversation: event === "SIGNED_IN" || event === "SIGNED_OUT"
+        });
+      }, 0);
+    });
+
     renderAccountUI();
-    addMessage("bot", buildWelcomeMessage());
     render();
   </script>
 </body>
