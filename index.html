@@ -24,6 +24,8 @@
 
     * { box-sizing: border-box; }
 
+    html, body { max-width: 100%; overflow-x: hidden; }
+
     body {
       margin: 0;
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -874,6 +876,7 @@
     label {
       display: grid;
       gap: 7px;
+      min-width: 0;
       color: var(--muted);
       font-weight: 900;
       font-size: 13px;
@@ -881,6 +884,8 @@
 
     input, select, textarea {
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
       border: 1px solid var(--line);
       border-radius: 17px;
       padding: 13px 14px;
@@ -893,6 +898,43 @@
     input:focus, select:focus, textarea:focus {
       border-color: rgba(255, 122, 89, 0.5);
       box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.12);
+    }
+
+
+    .date-control {
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, 0.82);
+      transition: box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .date-control:focus-within {
+      border-color: rgba(255, 122, 89, 0.5);
+      box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.12);
+    }
+
+    .date-control input[type="date"] {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--ink);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .date-control input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 1;
+      cursor: pointer;
     }
 
     .form-actions {
@@ -1413,6 +1455,9 @@
 
     @media (max-width: 420px) {
       .app-shell { width: calc(100% - 10px); }
+      .modal-card { padding-left: 14px; padding-right: 14px; }
+      .modal-head { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+      .quantity-unit-grid { grid-template-columns: minmax(0, 1fr) 96px; }
       .fridge-stage {
         padding: 12px 4px 12px 34px;
         min-height: 580px;
@@ -1563,7 +1608,15 @@
     .recipe-modal-section ol { margin: 0; padding-left: 20px; line-height: 1.7; }
 
     .required-inline { color: #d62828; font-weight: 950; }
-    .quantity-unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .quantity-unit-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(88px, .82fr);
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .quantity-unit-grid > * { min-width: 0; }
 
     @media (max-width: 760px) {
       .chat-workspace { grid-template-columns: 1fr; }
@@ -1571,6 +1624,93 @@
       .chat-thread-list { grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; }
       .chat-thread-btn { min-width: 160px; }
       .food-detail-body { padding-left: 14px; }
+
+      /* 모바일 전용 입력 UI */
+      .modal-backdrop {
+        place-items: end center;
+        padding: 0;
+      }
+
+      .modal-card {
+        width: 100%;
+        max-width: none;
+        max-height: calc(100dvh - 10px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+        border-radius: 28px 28px 0 0;
+      }
+
+      .modal-head {
+        position: sticky;
+        top: -20px;
+        z-index: 4;
+        margin: -20px -16px 18px;
+        padding: 20px 16px 14px;
+        background: rgba(255,255,255,.96);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-head h2 { font-size: 22px; }
+      .modal-head .muted { font-size: 12px; line-height: 1.45; }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .form-grid > label,
+      .form-grid > .upload-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .quantity-unit-grid {
+        grid-template-columns: minmax(0, 1fr) 108px;
+      }
+
+      input, select, textarea,
+      .date-control,
+      .upload-box {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .date-control {
+        padding: 12px 13px;
+        overflow: hidden;
+      }
+
+      .date-control input[type="date"] {
+        font-size: 16px;
+        line-height: 1.35;
+      }
+
+      .upload-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .upload-actions button { width: 100%; }
+
+      .form-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+      }
+
+      .form-actions button {
+        width: 100%;
+        min-height: 48px;
+      }
+
+      #editFoodForm,
+      #addFoodForm { width: 100%; min-width: 0; }
     }
 
   </style>
@@ -1806,10 +1946,14 @@
                     </div>
                   </label>
                   <label>냉장고에 넣은 날짜 (선택)
-                    <input id="foodStoredDate" type="date" />
+                    <div class="date-control">
+                      <input id="foodStoredDate" type="date" />
+                    </div>
                   </label>
                   <label>유통기한 <span class="required-star">*</span>
-                    <input id="foodExpiry" type="date" required />
+                    <div class="date-control">
+                      <input id="foodExpiry" type="date" required />
+                    </div>
                   </label>
                   <label>위치
                     <select id="foodLocation">
@@ -1827,7 +1971,7 @@
                     <div class="upload-box">
                       <div class="upload-actions">
                         <button class="ghost-btn" id="choosePhotoBtn" type="button">사진 선택</button>
-                        <button class="ghost-btn" id="takePhotoBtn" type="button">카메라 촬영</button>
+                        <button class="ghost-btn mobile-camera-only" id="takePhotoBtn" type="button" hidden>카메라 촬영</button>
                       </div>
                       <input id="foodPhotoInput" type="file" accept="image/*" hidden />
                       <input id="foodCameraInput" type="file" accept="image/*" capture="environment" hidden />
@@ -1928,10 +2072,14 @@
             </div>
           </label>
           <label>냉장고에 넣은 날짜 (선택)
-            <input id="editStoredDate" type="date" />
+            <div class="date-control">
+              <input id="editStoredDate" type="date" />
+            </div>
           </label>
           <label>유통기한 <span class="required-star">*</span>
-            <input id="editExpiry" type="date" required />
+            <div class="date-control">
+              <input id="editExpiry" type="date" required />
+            </div>
           </label>
           <label>냉장고 위치
             <select id="editLocation">
@@ -3742,6 +3890,21 @@
     });
 
     fridgeDoor.addEventListener("click", () => fridgeWrap.classList.toggle("open"));
+    function configureCameraAvailability() {
+      const cameraButton = document.getElementById("takePhotoBtn");
+      const cameraInput = document.getElementById("foodCameraInput");
+      const mobileByBrowser = navigator.userAgentData?.mobile === true;
+      const mobileByAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const mobileByPointer = window.matchMedia("(pointer: coarse) and (max-width: 1024px)").matches;
+      const cameraAllowed = mobileByBrowser || mobileByAgent || mobileByPointer;
+
+      if (cameraButton) cameraButton.hidden = !cameraAllowed;
+      if (cameraInput) cameraInput.disabled = !cameraAllowed;
+    }
+
+    configureCameraAvailability();
+    window.addEventListener("resize", configureCameraAvailability);
+
     fridgeDoor.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") fridgeWrap.classList.toggle("open");
     });
@@ -3756,7 +3919,14 @@
     });
     addFoodForm.addEventListener("submit", addFood);
     document.getElementById("choosePhotoBtn").addEventListener("click", () => document.getElementById("foodPhotoInput").click());
-    document.getElementById("takePhotoBtn").addEventListener("click", () => document.getElementById("foodCameraInput").click());
+    document.getElementById("takePhotoBtn").addEventListener("click", () => {
+      const cameraInput = document.getElementById("foodCameraInput");
+      if (cameraInput?.disabled) {
+        openToast("카메라 촬영은 모바일에서만 사용할 수 있어요.");
+        return;
+      }
+      cameraInput.click();
+    });
     document.getElementById("foodPhotoInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
     document.getElementById("foodCameraInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
     document.getElementById("scanPhotoBtn").addEventListener("click", scanSelectedPhoto);
