@@ -2928,7 +2928,7 @@
           "그릭 요거트를 그릇에 담습니다.",
           fruits.length ? "과일을 씻어 먹기 좋은 크기로 자릅니다." : "과일이나 견과류가 있다면 먹기 좋은 크기로 준비합니다.",
           "준비한 토핑을 요거트 위에 올립니다.",
-          "원하면 꿀을 조금 더해 바로 먹습니다. 가열하거나 간장·소금으로 간하지 않습니다."
+          "원하면 꿀을 조금 더해 바로 먹습니다."
         ];
         searchQuery = "그릭요거트";
       } else if (/채소계란말이|계란말이/.test(normalizedMenu)) {
@@ -2942,7 +2942,7 @@
           "계란을 풀고 소금을 아주 조금 넣습니다.",
           vegetables.length ? "채소를 잘게 다져 계란물에 섞습니다." : "대파·당근 등 넣을 채소가 있다면 잘게 다져 섞습니다.",
           "약불로 달군 팬에 기름을 얇게 두르고 계란물을 조금씩 부어 말아 줍니다.",
-          "속까지 익으면 한입 크기로 썹니다. 닭갈비처럼 메뉴명과 관계없는 재료는 넣지 않습니다."
+          "속까지 익으면 한입 크기로 썹니다."
         ];
         searchQuery = vegetables.length ? "채소 계란말이" : "계란말이";
       } else if (/불고기덮밥/.test(normalizedMenu)) {
@@ -3696,7 +3696,7 @@
         const fruitNames = uniqueNames(fruitFoods).slice(0, 3);
         addIdea(
           `${mealHint} 메뉴 · ${fruitNames.length ? "그릭 요거트 과일볼" : "그릭 요거트"}`,
-          `${withJosa(yogurtFood.name, "을/를")} 그릇에 담고 ${fruitNames.length ? `${fruitNames.join(", ")}를 올려` : "견과류나 꿀이 있다면 곁들여"} 바로 드세요. 가열하거나 간장·소금으로 간하지 않습니다.`
+          `${withJosa(yogurtFood.name, "을/를")} 그릇에 담고 ${fruitNames.length ? `${fruitNames.join(", ")}를 올려` : "견과류나 꿀이 있다면 곁들여"} 바로 드세요.`
         );
       }
 
@@ -3725,7 +3725,7 @@
         }
         addIdea(
           `${mealHint} 메뉴 · ${proteinLabel} 채소볶음`,
-          `${withJosa(proteinLabel, "을/를")} 먼저 익힌 뒤 ${withJosa(vegetableText, "을/를")} 넣고 볶으세요. 우유·주스 같은 음료는 조리 재료에서 제외하고 따로 곁들이세요.`
+          `${withJosa(proteinLabel, "을/를")} 먼저 익힌 뒤 ${withJosa(vegetableText, "을/를")} 넣고 볶으세요.`
         );
       }
 
