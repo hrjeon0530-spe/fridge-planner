@@ -1527,9 +1527,45 @@
       white-space: nowrap;
     }
 
+    .chat-thread-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .chat-thread-row .chat-thread-btn {
+      min-width: 0;
+    }
+
     .chat-thread-btn.active {
       background: #293241;
       color: white;
+    }
+
+    .chat-thread-action {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+
+    .chat-thread-action:hover {
+      color: var(--ink);
+      background: rgba(255,255,255,0.96);
+    }
+
+    .chat-manage-help {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 12px;
     }
 
     .chat-empty-note {
@@ -1620,9 +1656,10 @@
 
     @media (max-width: 760px) {
       .chat-workspace { grid-template-columns: 1fr; }
-      .chat-sidebar { min-height: auto; max-height: 210px; }
-      .chat-thread-list { grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; }
-      .chat-thread-btn { min-width: 160px; }
+      .chat-sidebar { min-height: auto; max-height: 230px; }
+      .chat-thread-list { grid-auto-flow: column; grid-auto-columns: minmax(205px, 1fr); overflow-x: auto; }
+      .chat-thread-row { min-width: 205px; }
+      .chat-thread-btn { min-width: 0; }
       .food-detail-body { padding-left: 14px; }
 
       /* 모바일 전용 입력 UI */
@@ -2126,6 +2163,27 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="chatThreadModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>대화 관리</h2>
+          <div class="muted">대화 이름을 바꾸거나 기록을 삭제할 수 있어요.</div>
+        </div>
+        <button class="close-btn" id="closeChatThreadModalBtn" type="button">×</button>
+      </div>
+      <input id="chatThreadManageId" type="hidden" />
+      <label>대화 이름
+        <input id="chatThreadTitleInput" type="text" maxlength="60" placeholder="대화 이름" />
+      </label>
+      <div class="form-actions">
+        <button class="primary-btn" id="saveChatThreadTitleBtn" type="button">이름 저장</button>
+        <button class="danger-btn" id="deleteChatThreadBtn" type="button">대화 삭제</button>
+      </div>
+      <div class="chat-manage-help" id="chatThreadManageHelp">대화를 삭제하면 그 안의 메시지도 함께 삭제되며 복구할 수 없습니다.</div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="signupModal">
     <div class="modal-card">
       <div class="modal-head">
@@ -2229,6 +2287,7 @@
     let activeThreadId = null;
     let currentChatMessages = [];
     let currentRescueRecipes = [];
+    let chatDeleteArmed = false;
 
     const tabs = document.querySelectorAll(".tab-btn");
     const views = {
@@ -2247,6 +2306,7 @@
     const chatThreadList = document.getElementById("chatThreadList");
     const editModal = document.getElementById("editModal");
     const recipeModal = document.getElementById("recipeModal");
+    const chatThreadModal = document.getElementById("chatThreadModal");
     const signupModal = document.getElementById("signupModal");
     const accountModal = document.getElementById("accountModal");
     const withdrawConfirmModal = document.getElementById("withdrawConfirmModal");
@@ -2807,21 +2867,176 @@
       return false;
     }
 
+    function cleanMenuTitle(value) {
+      return String(value || "냉장고 메뉴")
+        .replace(/^.*?·\s*/, "")
+        .replace(/^(오늘|아침|점심|저녁|빠르게)\s*메뉴\s*·?\s*/i, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function recipeFoodMatches(food, keywords) {
+      const name = normalizeFoodText(food?.name).replace(/\s+/g, "");
+      return keywords.some(keyword => name.includes(normalizeFoodText(keyword).replace(/\s+/g, "")));
+    }
+
+    function recipeFoodLabel(food) {
+      return food ? `${food.name} ${formatQuantity(food)}` : "";
+    }
+
+    function uniqueRecipeIngredients(values) {
+      return [...new Set(values.filter(Boolean).map(value => String(value).trim()).filter(Boolean))];
+    }
+
     function recipeDetailFromSuggestion(item, sourceFoods) {
-      const names = sourceFoods.filter(food => !isExpiredFood(food)).slice(0, 5).map(food => `${food.name} ${formatQuantity(food)}`);
-      const title = item.title || "냉장고 메뉴";
-      const joined = names.length ? names : ["냉장고 재료"];
-      let steps;
-      if (/샐러드|무침/.test(title)) {
-        steps = ["재료를 먹기 좋은 크기로 손질합니다.", "물기를 제거하고 볼에 담습니다.", "간장·식초·참기름 또는 원하는 드레싱으로 가볍게 버무립니다.", "바로 먹거나 잠깐 차갑게 두었다가 냅니다."];
-      } else if (/구이|토스트/.test(title)) {
-        steps = ["재료의 물기를 닦고 먹기 좋은 크기로 준비합니다.", "팬이나 에어프라이어를 예열합니다.", "재료를 골고루 익히고 소금·후추로 간합니다.", "곁들일 채소나 밥과 함께 냅니다."];
-      } else if (/국|탕|찌개/.test(title)) {
-        steps = ["냄비에 물과 단단한 재료부터 넣고 끓입니다.", "주재료를 넣고 충분히 익힙니다.", "간장·소금·마늘로 간을 맞춥니다.", "대파나 후추가 있다면 마지막에 더합니다."];
+      const foodsForRecipe = (sourceFoods || []).filter(food => !isExpiredFood(food) && !food.needsDetails);
+      const menu = cleanMenuTitle(item.title);
+      const normalizedMenu = normalizeFoodText(menu).replace(/\s+/g, "");
+      const find = keywords => foodsForRecipe.find(food => recipeFoodMatches(food, keywords));
+      const findAll = (keywords, categories = []) => foodsForRecipe.filter(food =>
+        recipeFoodMatches(food, keywords) || categories.includes(food.category)
+      );
+      const label = keywords => recipeFoodLabel(find(keywords));
+      const labels = (keywords, categories = [], limit = 4) =>
+        uniqueRecipeIngredients(findAll(keywords, categories).slice(0, limit).map(recipeFoodLabel));
+
+      const egg = label(["계란", "달걀"]);
+      const yogurt = label(["그릭요거트", "그릭 요거트", "요거트"]);
+      const rice = label(["밥", "햇반"]);
+      const bulgogi = label(["불고기"]);
+      const kimchi = label(["김치"]);
+      const tofu = label(["두부", "순두부", "연두부"]);
+      const pasta = label(["파스타", "스파게티"]);
+      const bread = label(["식빵", "빵", "토스트", "또띠아"]);
+      const dumpling = label(["만두"]);
+      const fruits = labels(["딸기", "바나나", "사과", "포도", "복숭아", "키위", "귤"], ["과일"], 3);
+      const vegetables = labels(["양파", "대파", "당근", "애호박", "버섯", "시금치", "브로콜리", "양배추", "상추", "오이", "토마토", "고추", "파"], ["채소"], 4);
+      const meat = label(["닭갈비", "닭고기", "닭가슴살", "불고기", "소고기", "돼지고기", "삼겹살", "목살", "햄", "베이컨", "소시지"]);
+      const fish = label(["연어", "고등어", "생선", "새우", "오징어", "참치"]);
+
+      let ingredients = [];
+      let steps = [];
+      let searchQuery = menu;
+
+      if (/그릭요거트|요거트/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([
+          yogurt || "그릭 요거트 1컵",
+          ...fruits,
+          "꿀 또는 견과류 약간 (선택)"
+        ]);
+        steps = [
+          "그릭 요거트를 그릇에 담습니다.",
+          fruits.length ? "과일을 씻어 먹기 좋은 크기로 자릅니다." : "과일이나 견과류가 있다면 먹기 좋은 크기로 준비합니다.",
+          "준비한 토핑을 요거트 위에 올립니다.",
+          "원하면 꿀을 조금 더해 바로 먹습니다. 가열하거나 간장·소금으로 간하지 않습니다."
+        ];
+        searchQuery = "그릭요거트";
+      } else if (/채소계란말이|계란말이/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([
+          egg || "계란 2~3개",
+          ...vegetables,
+          "소금 약간",
+          "식용유 약간"
+        ]);
+        steps = [
+          "계란을 풀고 소금을 아주 조금 넣습니다.",
+          vegetables.length ? "채소를 잘게 다져 계란물에 섞습니다." : "대파·당근 등 넣을 채소가 있다면 잘게 다져 섞습니다.",
+          "약불로 달군 팬에 기름을 얇게 두르고 계란물을 조금씩 부어 말아 줍니다.",
+          "속까지 익으면 한입 크기로 썹니다. 닭갈비처럼 메뉴명과 관계없는 재료는 넣지 않습니다."
+        ];
+        searchQuery = vegetables.length ? "채소 계란말이" : "계란말이";
+      } else if (/불고기덮밥/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([bulgogi || meat || "불고기", rice || "밥 1공기", ...vegetables.slice(0, 2), "간장 또는 불고기 양념"]);
+        steps = ["불고기와 채소를 먹기 좋은 크기로 준비합니다.", "팬에 불고기를 충분히 익히고 채소를 함께 볶습니다.", "밥 위에 볶은 불고기를 올립니다.", "김가루나 계란이 있다면 선택해서 곁들입니다."];
+        searchQuery = "불고기 덮밥";
+      } else if (/불고기볶음면/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([bulgogi || "불고기", pasta || label(["라면", "국수", "우동", "면"]) || "면", ...vegetables.slice(0, 2), "간장 약간"]);
+        steps = ["면을 알맞게 삶아 물기를 뺍니다.", "불고기를 팬에서 충분히 익힙니다.", "채소와 삶은 면을 넣고 짧게 볶습니다.", "간장은 소량만 넣어 마무리합니다."];
+        searchQuery = "불고기 볶음면";
+      } else if (/불고기볶음/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([bulgogi || "불고기", ...vegetables.slice(0, 3), "식용유 약간"]);
+        steps = ["불고기와 채소를 준비합니다.", "팬을 달군 뒤 불고기를 먼저 익힙니다.", "채소를 넣어 숨이 살짝 죽을 때까지 볶습니다.", "양념된 불고기라면 추가 간은 최소화합니다."];
+        searchQuery = "불고기 볶음";
+      } else if (/김치볶음밥/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([kimchi || "김치", rice || "밥 1공기", egg, "식용유 또는 참기름 약간"]);
+        steps = ["김치를 잘게 썹니다.", "팬에 김치를 먼저 볶습니다.", "밥을 넣고 고루 섞어 볶습니다.", egg ? "계란을 따로 익혀 위에 올립니다." : "참기름이나 김가루가 있다면 마무리합니다."];
+        searchQuery = "김치볶음밥";
+      } else if (/두부김치/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([tofu || "두부 1모", kimchi || "김치", "참기름 약간"]);
+        steps = ["두부를 먹기 좋은 크기로 잘라 데치거나 굽습니다.", "김치를 팬에서 따로 볶습니다.", "접시에 두부와 볶은 김치를 나란히 담습니다.", "참기름이나 깨가 있다면 조금 뿌립니다."];
+        searchQuery = "두부김치";
+      } else if (/크림파스타/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([pasta || "파스타면", label(["우유", "생크림"]) || "우유 또는 생크림", label(["치즈", "버터"]), ...vegetables.slice(0, 2), "소금·후추 약간"]);
+        steps = ["파스타면을 소금물에 삶습니다.", "팬에 채소를 볶고 우유나 생크림을 넣어 약불로 데웁니다.", "삶은 면을 넣고 소스와 섞습니다.", "치즈나 후추가 있다면 마지막에 더합니다."];
+        searchQuery = "크림 파스타";
+      } else if (/토마토파스타/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([pasta || "파스타면", label(["토마토"]) || "토마토 또는 토마토소스", ...vegetables.slice(0, 2), "마늘·소금 약간"]);
+        steps = ["파스타면을 삶습니다.", "팬에 마늘과 채소를 볶습니다.", "토마토 또는 토마토소스를 넣고 끓입니다.", "면을 소스에 넣고 고루 섞습니다."];
+        searchQuery = "토마토 파스타";
+      } else if (/오일파스타/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([pasta || "파스타면", ...vegetables.slice(0, 3), "마늘", "올리브유 또는 식용유", "소금 약간"]);
+        steps = ["파스타면을 삶고 면수는 조금 남깁니다.", "팬에 기름과 마늘을 넣어 약불에서 향을 냅니다.", "채소와 면을 넣고 볶습니다.", "면수와 소금으로 농도와 간을 맞춥니다."];
+        searchQuery = "채소 오일 파스타";
+      } else if (/계란볶음밥/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([egg || "계란 2개", rice || "밥 1공기", ...vegetables.slice(0, 3), "식용유·간장 약간"]);
+        steps = ["채소를 잘게 썹니다.", "팬에서 계란을 부드럽게 익힙니다.", "채소와 밥을 넣고 센 불에 빠르게 볶습니다.", "간장은 팬 가장자리에 소량 둘러 마무리합니다."];
+        searchQuery = "계란볶음밥";
+      } else if (/계란토스트/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([egg || "계란 1~2개", bread || "식빵 2장", ...vegetables.slice(0, 2), label(["치즈"]), "소금 약간"]);
+        steps = ["계란을 풀고 소금을 조금 넣습니다.", "채소가 있다면 잘게 썰어 계란물에 섞습니다.", "팬에서 계란을 익히고 식빵도 노릇하게 굽습니다.", "식빵 사이에 계란과 치즈를 넣습니다."];
+        searchQuery = "계란 토스트";
+      } else if (/두부덮밥/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([tofu || "두부", rice || "밥 1공기", ...vegetables.slice(0, 2), "간장·참기름 약간"]);
+        steps = ["두부의 물기를 닦고 먹기 좋은 크기로 자릅니다.", "팬에서 두부를 노릇하게 굽습니다.", "간장 양념과 채소를 넣어 짧게 조립니다.", "밥 위에 두부와 채소를 올립니다."];
+        searchQuery = "두부 덮밥";
+      } else if (/두부구이/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([tofu || "두부", "식용유 약간", "간장·참기름 양념 (선택)"]);
+        steps = ["두부의 물기를 충분히 닦습니다.", "먹기 좋은 크기로 잘라 팬에 올립니다.", "앞뒤로 노릇하게 굽습니다.", "원하면 간장 양념을 곁들입니다."];
+        searchQuery = "두부구이";
+      } else if (/만두국/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([dumpling || "만두", egg, ...vegetables.slice(0, 2), "물 또는 육수", "소금·국간장 약간"]);
+        steps = ["냄비에 물이나 육수를 끓입니다.", "만두를 넣고 속까지 익힙니다.", "계란과 대파가 있다면 마지막에 넣습니다.", "국간장이나 소금으로 간합니다."];
+        searchQuery = "만두국";
+      } else if (/군만두/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([dumpling || "만두", "식용유 약간"]);
+        steps = ["팬에 기름을 얇게 두릅니다.", "만두를 올리고 바닥을 노릇하게 굽습니다.", "물을 조금 넣고 뚜껑을 덮어 속까지 익힙니다.", "뚜껑을 열고 수분을 날려 바삭하게 마무리합니다."];
+        searchQuery = "군만두";
+      } else if (/샐러드|무침/.test(normalizedMenu)) {
+        const saladFoods = uniqueRecipeIngredients([...vegetables, ...fruits].slice(0, 5));
+        ingredients = uniqueRecipeIngredients([...(saladFoods.length ? saladFoods : ["샐러드용 채소"]), "드레싱"]);
+        steps = ["재료를 깨끗이 씻고 물기를 제거합니다.", "먹기 좋은 크기로 썹니다.", "그릇에 담고 메뉴에 맞는 드레싱을 곁들입니다.", "먹기 직전에 가볍게 섞습니다."];
+        searchQuery = menu;
+      } else if (/구이/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([fish || meat || tofu || foodsForRecipe[0]?.name || "주재료", ...vegetables.slice(0, 2), "식용유·소금 약간"]);
+        steps = ["주재료의 물기를 닦고 먹기 좋은 크기로 준비합니다.", "팬이나 에어프라이어를 예열합니다.", "재료 특성에 맞게 속까지 충분히 익힙니다.", "채소나 밥과 함께 냅니다."];
+        searchQuery = menu;
+      } else if (/덮밥/.test(normalizedMenu)) {
+        ingredients = uniqueRecipeIngredients([meat || fish || tofu || egg || "주재료", rice || "밥 1공기", ...vegetables.slice(0, 2), "간장 양념 약간"]);
+        steps = ["주재료와 채소를 먹기 좋은 크기로 준비합니다.", "팬에서 주재료를 충분히 익힙니다.", "채소와 양념을 넣고 짧게 볶거나 조립니다.", "밥 위에 올려 완성합니다."];
+        searchQuery = menu;
       } else {
-        steps = ["재료를 먹기 좋은 크기로 손질합니다.", "팬에 기름을 두르고 익는 데 오래 걸리는 재료부터 볶습니다.", "나머지 재료를 넣고 간장·소금·마늘로 간합니다.", "밥이나 빵이 있다면 곁들여 한 끼로 완성합니다."];
+        const relevant = uniqueRecipeIngredients([
+          meat || fish || tofu || egg || yogurt || foodsForRecipe[0]?.name,
+          ...vegetables.slice(0, 2),
+          rice || pasta || bread
+        ]);
+        ingredients = relevant.length ? relevant : ["메뉴에 맞는 주재료"];
+        steps = [
+          "메뉴 이름과 재료의 조리 특성을 먼저 확인합니다.",
+          "주재료와 잘 어울리는 재료만 골라 손질합니다.",
+          "재료에 맞는 방식으로 굽거나 끓이거나 볶습니다.",
+          "간은 메뉴 종류에 맞게 최소한으로 조절합니다."
+        ];
+        searchQuery = menu;
       }
-      return { title, summary: item.text || "냉장고 재료로 간단하게 만드는 메뉴입니다.", ingredients: joined, steps };
+
+      return {
+        title: item.title || menu,
+        summary: item.text || `${menu}에 맞는 재료와 조리법입니다.`,
+        ingredients: uniqueRecipeIngredients(ingredients),
+        steps,
+        searchQuery
+      };
     }
 
     function openRecipeModal(index) {
@@ -2832,7 +3047,7 @@
       document.getElementById("recipeModalSummary").textContent = detail.summary;
       document.getElementById("recipeModalIngredients").innerHTML = detail.ingredients.map(value => `<li>${escapeHtml(value)}</li>`).join("");
       document.getElementById("recipeModalSteps").innerHTML = detail.steps.map(value => `<li>${escapeHtml(value)}</li>`).join("");
-      const query = detail.title.replace(/^.*?·\s*/, "");
+      const query = detail.searchQuery || cleanMenuTitle(detail.title);
       document.getElementById("recipeSearchLink").href = `https://www.10000recipe.com/recipe/list.html?q=${encodeURIComponent(query)}`;
       recipeModal.classList.add("open");
     }
@@ -3469,10 +3684,20 @@
           );
         } else {
           addIdea(
-            `${mealHint} 메뉴 · 채소 계란말이`,
+            `${mealHint} 메뉴 · ${vegetableNames.length ? "채소 계란말이" : "계란말이"}`,
             `${withJosa(egg.name, "을/를")} 풀고 ${vegetableNames.length ? `${withJosa(vegetableText, "을/를")} 잘게 썰어 넣어` : "소금으로 가볍게 간해"} 천천히 말아 익히세요. ${milk ? "우유는 계란물에 소량만 넣을 수 있어요." : ""}`
           );
         }
+      }
+
+      const yogurtFood = findFood(["그릭 요거트", "그릭요거트", "요거트"]);
+      const fruitFoods = findFoodsByCategory("과일");
+      if (yogurtFood) {
+        const fruitNames = uniqueNames(fruitFoods).slice(0, 3);
+        addIdea(
+          `${mealHint} 메뉴 · ${fruitNames.length ? "그릭 요거트 과일볼" : "그릭 요거트"}`,
+          `${withJosa(yogurtFood.name, "을/를")} 그릇에 담고 ${fruitNames.length ? `${fruitNames.join(", ")}를 올려` : "견과류나 꿀이 있다면 곁들여"} 바로 드세요. 가열하거나 간장·소금으로 간하지 않습니다.`
+        );
       }
 
       if (tofu) {
@@ -3742,11 +3967,86 @@
         return;
       }
       chatThreadList.innerHTML = chatThreads.map(thread => `
-        <button class="chat-thread-btn ${thread.id === activeThreadId ? "active" : ""}" type="button" data-thread-id="${thread.id}">${escapeHtml(thread.title || "새 대화")}</button>
+        <div class="chat-thread-row">
+          <button class="chat-thread-btn ${thread.id === activeThreadId ? "active" : ""}" type="button" data-thread-id="${thread.id}">${escapeHtml(thread.title || "새 대화")}</button>
+          <button class="chat-thread-action" type="button" data-thread-manage="${thread.id}" aria-label="${escapeHtml(thread.title || "새 대화")} 관리">⋯</button>
+        </div>
       `).join("");
       chatThreadList.querySelectorAll("[data-thread-id]").forEach(button => {
         button.addEventListener("click", () => void openChatThread(button.dataset.threadId));
       });
+      chatThreadList.querySelectorAll("[data-thread-manage]").forEach(button => {
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          openChatThreadManage(button.dataset.threadManage);
+        });
+      });
+    }
+
+    function openChatThreadManage(threadId) {
+      const thread = chatThreads.find(item => item.id === threadId);
+      if (!thread || !chatThreadModal) return;
+      chatDeleteArmed = false;
+      document.getElementById("chatThreadManageId").value = thread.id;
+      document.getElementById("chatThreadTitleInput").value = thread.title || "새 대화";
+      document.getElementById("deleteChatThreadBtn").textContent = "대화 삭제";
+      document.getElementById("chatThreadManageHelp").textContent = "대화를 삭제하면 그 안의 메시지도 함께 삭제되며 복구할 수 없습니다.";
+      chatThreadModal.classList.add("open");
+      setTimeout(() => document.getElementById("chatThreadTitleInput").focus(), 80);
+    }
+
+    function closeChatThreadManage() {
+      chatDeleteArmed = false;
+      if (chatThreadModal) chatThreadModal.classList.remove("open");
+    }
+
+    async function renameChatThread() {
+      const threadId = document.getElementById("chatThreadManageId").value;
+      const title = document.getElementById("chatThreadTitleInput").value.trim();
+      if (!threadId || !title) {
+        openToast("대화 이름을 입력해 주세요.");
+        return;
+      }
+      const { error } = await supabase
+        .from("chat_threads")
+        .update({ title, updated_at: new Date().toISOString() })
+        .eq("id", threadId);
+      if (error) {
+        console.error("대화 이름 변경 실패", error);
+        openToast("대화 이름을 바꾸지 못했어요.");
+        return;
+      }
+      chatThreads = chatThreads.map(thread => thread.id === threadId ? { ...thread, title, updated_at: new Date().toISOString() } : thread);
+      renderChatSidebar();
+      closeChatThreadManage();
+      openToast("대화 이름을 변경했어요.");
+    }
+
+    async function deleteChatThread() {
+      const threadId = document.getElementById("chatThreadManageId").value;
+      if (!threadId) return;
+      if (!chatDeleteArmed) {
+        chatDeleteArmed = true;
+        document.getElementById("deleteChatThreadBtn").textContent = "정말 삭제하기";
+        document.getElementById("chatThreadManageHelp").textContent = "한 번 더 누르면 대화와 모든 메시지가 영구 삭제됩니다.";
+        return;
+      }
+      const wasActive = activeThreadId === threadId;
+      const { error } = await supabase.from("chat_threads").delete().eq("id", threadId);
+      if (error) {
+        console.error("대화 삭제 실패", error);
+        openToast("대화를 삭제하지 못했어요.");
+        return;
+      }
+      chatThreads = chatThreads.filter(thread => thread.id !== threadId);
+      closeChatThreadManage();
+      if (wasActive) {
+        if (chatThreads.length) await openChatThread(chatThreads[0].id);
+        else startNewChat(true);
+      } else {
+        renderChatSidebar();
+      }
+      openToast("대화를 삭제했어요.");
     }
 
     async function openChatThread(threadId) {
@@ -3995,6 +4295,19 @@
     document.getElementById("closeRecipeModalBtn").addEventListener("click", closeRecipeModal);
     recipeModal.addEventListener("click", event => {
       if (event.target === recipeModal) closeRecipeModal();
+    });
+
+    document.getElementById("closeChatThreadModalBtn").addEventListener("click", closeChatThreadManage);
+    document.getElementById("saveChatThreadTitleBtn").addEventListener("click", () => void renameChatThread());
+    document.getElementById("deleteChatThreadBtn").addEventListener("click", () => void deleteChatThread());
+    document.getElementById("chatThreadTitleInput").addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void renameChatThread();
+      }
+    });
+    chatThreadModal.addEventListener("click", event => {
+      if (event.target === chatThreadModal) closeChatThreadManage();
     });
     chatForm.addEventListener("submit", handleChat);
     resetAddFoodForm();
