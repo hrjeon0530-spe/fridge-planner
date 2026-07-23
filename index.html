@@ -909,6 +909,89 @@
       margin-top: 12px;
     }
 
+
+    .upload-field {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .upload-box {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px dashed rgba(36, 49, 61, 0.22);
+      background: rgba(255,255,255,0.54);
+      min-height: 100%;
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .upload-actions button {
+      flex: 1 1 130px;
+    }
+
+    .scan-preview {
+      display: none;
+      gap: 10px;
+      align-items: center;
+      grid-template-columns: 72px 1fr;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+    }
+
+    .scan-preview.show { display: grid; }
+
+    .scan-preview img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+
+    .scan-status {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .required-star {
+      color: #d90429;
+      font-weight: 950;
+      margin-left: 3px;
+    }
+
+    .pending-note {
+      color: #c9184a;
+      font-weight: 900;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .fridge-item .pending-star {
+      color: #d90429;
+      font-size: 15px;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .notification-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
     .chat-layout {
       display: grid;
       grid-template-columns: 0.75fr 1.25fr;
@@ -1351,6 +1434,145 @@
       .brand-subtitle { font-size: 11px; }
       .primary-btn, .ghost-btn, .danger-btn { padding: 11px 14px; }
     }
+  
+
+    /* v2: 저장형 채팅, 수량, 간결한 재료 목록, 레시피 모달 */
+    .chat-workspace {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .chat-sidebar {
+      min-height: 560px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .chat-sidebar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .chat-sidebar-head h2 { font-size: 20px; }
+
+    .chat-thread-list {
+      display: grid;
+      gap: 8px;
+      overflow: auto;
+      align-content: start;
+    }
+
+    .chat-thread-btn {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 16px;
+      text-align: left;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chat-thread-btn.active {
+      background: #293241;
+      color: white;
+    }
+
+    .chat-empty-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+    }
+
+    .food-details {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.64);
+      overflow: hidden;
+    }
+
+    .food-details summary {
+      list-style: none;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 11px;
+      align-items: center;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+
+    .food-details summary::-webkit-details-marker { display: none; }
+
+    .food-compact-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 950;
+    }
+
+    .food-detail-body {
+      padding: 0 14px 14px 62px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      border-top: 1px solid rgba(36,49,61,0.08);
+      padding-top: 12px;
+    }
+
+    .food-detail-actions { margin-top: 10px; }
+
+    .recipe-card {
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    .recipe-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(41,50,65,.10);
+    }
+
+    .recipe-modal-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .recipe-modal-section {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--line);
+    }
+
+    .recipe-modal-section h3 { margin: 0 0 10px; }
+    .recipe-modal-section ul,
+    .recipe-modal-section ol { margin: 0; padding-left: 20px; line-height: 1.7; }
+
+    .required-inline { color: #d62828; font-weight: 950; }
+    .quantity-unit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    @media (max-width: 760px) {
+      .chat-workspace { grid-template-columns: 1fr; }
+      .chat-sidebar { min-height: auto; max-height: 210px; }
+      .chat-thread-list { grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; }
+      .chat-thread-btn { min-width: 160px; }
+      .food-detail-body { padding-left: 14px; }
+    }
+
   </style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
 </head>
@@ -1567,11 +1789,27 @@
                       <option value="기타">기타</option>
                     </select>
                   </label>
-                  <label>냉장고에 넣은 날짜
+                  <label>수량
+                    <div class="quantity-unit-grid">
+                      <input id="foodQuantity" type="number" min="0.01" step="0.01" value="1" required />
+                      <select id="foodUnit">
+                        <option value="개">개</option>
+                        <option value="팩">팩</option>
+                        <option value="봉">봉</option>
+                        <option value="병">병</option>
+                        <option value="캔">캔</option>
+                        <option value="통">통</option>
+                        <option value="묶음">묶음</option>
+                        <option value="장">장</option>
+                        <option value="조각">조각</option>
+                      </select>
+                    </div>
+                  </label>
+                  <label>냉장고에 넣은 날짜 (선택)
                     <input id="foodStoredDate" type="date" />
                   </label>
-                  <label>유통기한 (선택)
-                    <input id="foodExpiry" type="date" />
+                  <label>유통기한 <span class="required-star">*</span>
+                    <input id="foodExpiry" type="date" required />
                   </label>
                   <label>위치
                     <select id="foodLocation">
@@ -1584,6 +1822,25 @@
                       <option value="freezer">냉동서랍</option>
                     </select>
                   </label>
+                  <div class="upload-field">
+                    <span>업로드</span>
+                    <div class="upload-box">
+                      <div class="upload-actions">
+                        <button class="ghost-btn" id="choosePhotoBtn" type="button">사진 선택</button>
+                        <button class="ghost-btn" id="takePhotoBtn" type="button">카메라 촬영</button>
+                      </div>
+                      <input id="foodPhotoInput" type="file" accept="image/*" hidden />
+                      <input id="foodCameraInput" type="file" accept="image/*" capture="environment" hidden />
+                      <div class="scan-preview" id="scanPreview">
+                        <img id="scanPreviewImage" alt="업로드한 식재료 사진 미리보기" />
+                        <div>
+                          <strong id="scanFileName">선택된 사진</strong>
+                          <div class="scan-status" id="scanStatus">사진을 확인한 뒤 스캔을 눌러주세요.</div>
+                          <button class="primary-btn" id="scanPhotoBtn" type="button" style="margin-top:8px;">사진 스캔</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="form-actions">
                   <button class="primary-btn" type="submit">냉장고에 넣기</button>
@@ -1607,11 +1864,18 @@
       </section>
 
       <section id="menuView" class="view">
-        <div class="chat-layout menu-chat-only">
+        <div class="chat-workspace">
+          <aside class="panel chat-sidebar">
+            <div class="chat-sidebar-head">
+              <h2>대화 기록</h2>
+              <button class="ghost-btn" id="newChatBtn" type="button">+ 새 대화</button>
+            </div>
+            <div class="chat-thread-list" id="chatThreadList"></div>
+          </aside>
           <section class="panel chat-box">
             <div class="messages" id="messages"></div>
             <form class="chat-input-area" id="chatForm">
-              <input id="chatInput" type="text" placeholder="예: 지금 내 냉장고에 있는 음식으로 아침 메뉴 추천해줘" />
+              <input id="chatInput" type="text" placeholder="예: 면 요리 말고 다른 메뉴 추천해줘" />
               <button class="primary-btn" type="submit">보내기</button>
             </form>
           </section>
@@ -1647,11 +1911,27 @@
               <option value="기타">기타</option>
             </select>
           </label>
-          <label>냉장고에 넣은 날짜
+          <label>수량
+            <div class="quantity-unit-grid">
+              <input id="editQuantity" type="number" min="0.01" step="0.01" required />
+              <select id="editUnit">
+                <option value="개">개</option>
+                <option value="팩">팩</option>
+                <option value="봉">봉</option>
+                <option value="병">병</option>
+                <option value="캔">캔</option>
+                <option value="통">통</option>
+                <option value="묶음">묶음</option>
+                <option value="장">장</option>
+                <option value="조각">조각</option>
+              </select>
+            </div>
+          </label>
+          <label>냉장고에 넣은 날짜 (선택)
             <input id="editStoredDate" type="date" />
           </label>
-          <label>유통기한 (선택)
-            <input id="editExpiry" type="date" />
+          <label>유통기한 <span class="required-star">*</span>
+            <input id="editExpiry" type="date" required />
           </label>
           <label>냉장고 위치
             <select id="editLocation">
@@ -1670,6 +1950,31 @@
           <button class="ghost-btn" id="cancelEditBtn" type="button">취소</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="recipeModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="recipeModalTitle">레시피</h2>
+          <div class="muted" id="recipeModalSummary"></div>
+        </div>
+        <button class="close-btn" id="closeRecipeModalBtn" type="button">×</button>
+      </div>
+      <div class="recipe-modal-grid">
+        <section class="recipe-modal-section">
+          <h3>사용할 재료</h3>
+          <ul id="recipeModalIngredients"></ul>
+        </section>
+        <section class="recipe-modal-section">
+          <h3>만드는 순서</h3>
+          <ol id="recipeModalSteps"></ol>
+        </section>
+      </div>
+      <div class="form-actions">
+        <a class="primary-btn" id="recipeSearchLink" target="_blank" rel="noopener noreferrer">만개의레시피에서 더 찾아보기</a>
+      </div>
     </div>
   </div>
 
@@ -1727,8 +2032,10 @@
           </div>
         </div>
         <div class="form-actions">
+          <button class="ghost-btn" id="enableAlertsBtn" type="button">알림 켜기</button>
           <button class="danger-btn" id="withdrawAccountBtn" type="button">회원 탈퇴</button>
         </div>
+        <div class="notification-note">현재 알림은 웹사이트를 열었을 때 임박 재료 수를 알려줍니다. 실제 모바일 푸시는 별도 PWA·푸시 서버 설정이 필요합니다.</div>
         <div class="account-help" id="accountHelp">닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.</div>
       </form>
     </div>
@@ -1770,6 +2077,10 @@
     let pendingView = null;
     let signupNudgeShown = sessionStorage.getItem(SIGNUP_NUDGE_KEY) === "1";
     let sessionApplySequence = 0;
+    let chatThreads = [];
+    let activeThreadId = null;
+    let currentChatMessages = [];
+    let currentRescueRecipes = [];
 
     const tabs = document.querySelectorAll(".tab-btn");
     const views = {
@@ -1785,7 +2096,9 @@
     const addFoodForm = document.getElementById("addFoodForm");
     const chatForm = document.getElementById("chatForm");
     const messages = document.getElementById("messages");
+    const chatThreadList = document.getElementById("chatThreadList");
     const editModal = document.getElementById("editModal");
+    const recipeModal = document.getElementById("recipeModal");
     const signupModal = document.getElementById("signupModal");
     const accountModal = document.getElementById("accountModal");
     const withdrawConfirmModal = document.getElementById("withdrawConfirmModal");
@@ -1939,6 +2252,10 @@
         storedDate: row.stored_date || "",
         expiryDate: row.expiry_date || "",
         location: row.location || "middle",
+        quantity: Number(row.quantity) || 1,
+        unit: row.unit || "개",
+        needsDetails: Boolean(row.needs_details),
+        source: row.source || "manual",
         createdAt: row.created_at
       };
     }
@@ -1952,7 +2269,7 @@
 
       const { data, error } = await supabase
         .from("foods")
-        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at")
         .order("created_at", { ascending: true });
 
       if (error) {
@@ -1965,6 +2282,7 @@
 
       foods = (data || []).map(mapFoodRow);
       render();
+      maybeShowExpiryAlert();
     }
 
     async function applySupabaseSession(session, { resetConversation = false } = {}) {
@@ -1979,6 +2297,10 @@
           messages.innerHTML = "";
           addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
         }
+        chatThreads = [];
+        activeThreadId = null;
+        currentChatMessages = [];
+        renderChatSidebar();
         renderAccountUI();
         render();
         return;
@@ -1995,9 +2317,10 @@
 
       renderAccountUI();
       await loadFoodsFromDatabase();
+      await loadChatThreads();
       if (sequence !== sessionApplySequence) return;
 
-      if (resetConversation && messages) {
+      if (resetConversation && messages && !activeThreadId) {
         messages.innerHTML = "";
         addMessage("bot", buildWelcomeMessage());
       }
@@ -2014,8 +2337,11 @@
 
     function resetAddFoodForm() {
       addFoodForm.reset();
-      document.getElementById("foodStoredDate").value = todayValue();
+      document.getElementById("foodStoredDate").value = "";
       document.getElementById("foodLocation").value = "auto";
+      document.getElementById("foodQuantity").value = "1";
+      document.getElementById("foodUnit").value = "개";
+      clearScanSelection();
     }
 
     function uid() {
@@ -2102,7 +2428,7 @@
 
     function getTip(food) {
       const days = getDaysLeft(food.expiryDate);
-      if (days === null) return `유통기한이 비어 있어요. 넣은 날짜(${formatDateLabel(food.storedDate)})를 기준으로 필요하면 나중에 추가해 주세요.`;
+      if (food.needsDetails || days === null) return "사진 스캔으로 추가된 재료예요. 유통기한을 반드시 입력해 주세요.";
       if (days < 0) return "상태 확인 후 버릴지 결정하세요. 냉장고가 이미 힌트를 주는 중.";
       if (days === 0) return "오늘 안에 먹는 것을 추천합니다. 내일의 나는 믿지 않는 편이 안전합니다.";
       if (days <= 3) return "우선 소비 후보입니다. 메뉴 추천에서도 먼저 반영됩니다.";
@@ -2175,6 +2501,7 @@
       const helpEl = document.getElementById("accountHelp");
       const nicknameInput = document.getElementById("accountNickname");
       const withdrawBtn = document.getElementById("withdrawAccountBtn");
+      const alertsBtn = document.getElementById("enableAlertsBtn");
       if (nicknameInput) nicknameInput.value = getNickname();
       if (statusEl) statusEl.textContent = isGuestUser() ? "게스트" : "회원";
       if (providerEl) providerEl.textContent = authState.provider || "미가입";
@@ -2183,6 +2510,11 @@
       if (helpEl) helpEl.textContent = hasNickname()
         ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
         : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
+      if (alertsBtn) {
+        alertsBtn.disabled = isGuestUser();
+        alertsBtn.style.opacity = isGuestUser() ? "0.55" : "";
+        alertsBtn.textContent = ("Notification" in window && Notification.permission === "granted") ? "알림 켜짐" : "알림 켜기";
+      }
       if (withdrawBtn) {
         withdrawBtn.disabled = false;
         withdrawBtn.style.opacity = "";
@@ -2291,17 +2623,93 @@
       }
     }
 
+    function formatQuantity(food) {
+      const quantity = Number(food.quantity) || 1;
+      const display = Number.isInteger(quantity) ? String(quantity) : String(quantity).replace(/\.0+$/, "");
+      return `${display}${food.unit || "개"}`;
+    }
+
+    function isExpiredFood(food) {
+      const days = getDaysLeft(food.expiryDate);
+      return typeof days === "number" && days < 0;
+    }
+
+    function getUsableFoods() {
+      return foods.filter(food => !isExpiredFood(food) && !food.needsDetails);
+    }
+
+    const blockedFoodWords = ["바보", "멍청이", "병신", "죽어", "싫어", "몰라", "아무거나", "테스트", "ㅋㅋ", "ㅎㅎ"];
+    const commonFoodValidationWords = [
+      "쌀", "현미", "잡곡", "고추장", "된장", "간장", "식초", "참기름", "들기름", "케첩", "마요네즈", "굴소스",
+      "사이다", "콜라", "주스", "생수", "탄산수", "커피", "차", "라이스페이퍼", "또띠아", "어묵", "떡갈비",
+      "깻잎", "무", "배추", "청경채", "미나리", "부추", "옥수수", "완두콩", "강낭콩", "병아리콩", "콩",
+      "메추리알", "순두부", "연두부", "모짜렐라", "생크림", "참치액", "멸치", "다시마", "김", "미역"
+    ];
+    const foodSuffixes = ["고기", "김치", "나물", "찌개", "국", "탕", "볶음", "조림", "샐러드", "면", "밥", "죽", "떡", "빵", "소스", "우유", "치즈", "과일", "채소", "버섯", "두부", "계란", "달걀", "햄", "만두", "피자", "파스타", "장", "기름", "가루", "캔"];
+
+    function validateFoodName(name) {
+      const value = String(name || "").trim();
+      const normalized = normalizeFoodText(value).replace(/\s+/g, "");
+      if (value.length < 1 || value.length > 40) return false;
+      if (!/^[가-힣a-zA-Z0-9\s()\-]+$/.test(value)) return false;
+      if (blockedFoodWords.some(word => normalized.includes(word))) return false;
+      const known = [...knownFoodNames, ...commonFoodValidationWords].sort((a,b) => b.length - a.length);
+      if (known.some(word => normalized.includes(normalizeFoodText(word).replace(/\s+/g, "")))) return true;
+      if (foodSuffixes.some(suffix => normalized.endsWith(suffix))) return true;
+      return false;
+    }
+
+    function recipeDetailFromSuggestion(item, sourceFoods) {
+      const names = sourceFoods.filter(food => !isExpiredFood(food)).slice(0, 5).map(food => `${food.name} ${formatQuantity(food)}`);
+      const title = item.title || "냉장고 메뉴";
+      const joined = names.length ? names : ["냉장고 재료"];
+      let steps;
+      if (/샐러드|무침/.test(title)) {
+        steps = ["재료를 먹기 좋은 크기로 손질합니다.", "물기를 제거하고 볼에 담습니다.", "간장·식초·참기름 또는 원하는 드레싱으로 가볍게 버무립니다.", "바로 먹거나 잠깐 차갑게 두었다가 냅니다."];
+      } else if (/구이|토스트/.test(title)) {
+        steps = ["재료의 물기를 닦고 먹기 좋은 크기로 준비합니다.", "팬이나 에어프라이어를 예열합니다.", "재료를 골고루 익히고 소금·후추로 간합니다.", "곁들일 채소나 밥과 함께 냅니다."];
+      } else if (/국|탕|찌개/.test(title)) {
+        steps = ["냄비에 물과 단단한 재료부터 넣고 끓입니다.", "주재료를 넣고 충분히 익힙니다.", "간장·소금·마늘로 간을 맞춥니다.", "대파나 후추가 있다면 마지막에 더합니다."];
+      } else {
+        steps = ["재료를 먹기 좋은 크기로 손질합니다.", "팬에 기름을 두르고 익는 데 오래 걸리는 재료부터 볶습니다.", "나머지 재료를 넣고 간장·소금·마늘로 간합니다.", "밥이나 빵이 있다면 곁들여 한 끼로 완성합니다."];
+      }
+      return { title, summary: item.text || "냉장고 재료로 간단하게 만드는 메뉴입니다.", ingredients: joined, steps };
+    }
+
+    function openRecipeModal(index) {
+      const item = currentRescueRecipes[index];
+      if (!item) return;
+      const detail = recipeDetailFromSuggestion(item, item.sourceFoods || getUsableFoods());
+      document.getElementById("recipeModalTitle").textContent = detail.title;
+      document.getElementById("recipeModalSummary").textContent = detail.summary;
+      document.getElementById("recipeModalIngredients").innerHTML = detail.ingredients.map(value => `<li>${escapeHtml(value)}</li>`).join("");
+      document.getElementById("recipeModalSteps").innerHTML = detail.steps.map(value => `<li>${escapeHtml(value)}</li>`).join("");
+      const query = detail.title.replace(/^.*?·\s*/, "");
+      document.getElementById("recipeSearchLink").href = `https://www.10000recipe.com/recipe/list.html?q=${encodeURIComponent(query)}`;
+      recipeModal.classList.add("open");
+    }
+
+    function closeRecipeModal() {
+      recipeModal.classList.remove("open");
+    }
+
     function foodRowTemplate(food) {
       const status = getStatus(food);
+      const required = food.needsDetails ? `<span class="required-inline" title="유통기한 입력 필요">*</span>` : "";
       return `
-        <article class="food-row" role="button" tabindex="0" data-edit-id="${food.id}">
-          <div class="food-icon">${getEmoji(food)}</div>
-          <div>
-            <div class="food-name">${escapeHtml(food.name)}</div>
-            <div class="food-meta">${escapeHtml(food.category)} · ${locationNames[food.location] || "미지정"} · 넣은 날짜 ${formatDateLabel(food.storedDate)} · 유통기한 ${formatDateLabel(food.expiryDate)}<br>${getTip(food)}</div>
+        <details class="food-details" data-edit-id="${food.id}">
+          <summary>
+            <div class="food-icon">${getEmoji(food)}</div>
+            <div class="food-compact-name">${escapeHtml(food.name)} ${required} · ${escapeHtml(formatQuantity(food))}</div>
+            <span class="status-badge ${status.badge}">${status.label}</span>
+          </summary>
+          <div class="food-detail-body">
+            ${escapeHtml(food.category)} · ${escapeHtml(locationNames[food.location] || "미지정")}<br>
+            넣은 날짜 ${escapeHtml(formatDateLabel(food.storedDate))} · 유통기한 ${escapeHtml(formatDateLabel(food.expiryDate))}<br>
+            ${escapeHtml(getTip(food))}
+            <div class="food-detail-actions"><button class="ghost-btn" type="button" data-edit-button="${food.id}">수정</button></div>
           </div>
-          <span class="status-badge ${status.badge}">${status.icon} ${status.label}</span>
-        </article>
+        </details>
       `;
     }
 
@@ -2331,20 +2739,28 @@
     }
 
     function renderRescueRecipes() {
-      const target = sortByUrgency(foods.filter(f => filterMatches(f, "soon") || filterMatches(f, "expired"))).slice(0, 4);
+      const usable = getUsableFoods();
+      const target = sortByUrgency(usable.filter(food => {
+        const days = getDaysLeft(food.expiryDate);
+        return typeof days === "number" && days >= 0 && days <= 3;
+      })).slice(0, 5);
       const container = document.getElementById("rescueRecipes");
-      if (!foods.length) {
-        container.innerHTML = `<div class="empty-box">재료를 추가하면 오늘의 구조 메뉴를 보여줍니다.</div>`;
+      if (!usable.length) {
+        currentRescueRecipes = [];
+        container.innerHTML = `<div class="empty-box">먹을 수 있는 재료를 추가하면 오늘의 구조 메뉴를 보여줍니다.</div>`;
         return;
       }
-      const source = target.length ? target : sortByUrgency(foods).slice(0, 4);
-      const suggestions = buildMenuSuggestions("빠르게", source, 3);
-      container.innerHTML = suggestions.map(item => `
-        <div class="recipe-card">
-          <div class="recipe-title">${item.title}</div>
-          <div class="recipe-text">${item.text}</div>
-        </div>
+      const source = target.length ? target : sortByUrgency(usable).slice(0, 5);
+      currentRescueRecipes = buildMenuSuggestions("빠르게", source, 3).map(item => ({ ...item, sourceFoods: source }));
+      container.innerHTML = currentRescueRecipes.map((item, index) => `
+        <button class="recipe-card" type="button" data-recipe-index="${index}">
+          <div class="recipe-title">${escapeHtml(item.title)}</div>
+          <div class="recipe-text">눌러서 레시피 보기</div>
+        </button>
       `).join("");
+      container.querySelectorAll("[data-recipe-index]").forEach(button => {
+        button.addEventListener("click", () => openRecipeModal(Number(button.dataset.recipeIndex)));
+      });
     }
 
     function renderFridgeItems() {
@@ -2364,7 +2780,7 @@
         el.draggable = true;
         el.dataset.id = food.id;
         el.title = `${food.name} · ${status.label}`;
-        el.innerHTML = `<span>${getEmoji(food)}</span><span>${escapeHtml(food.name)}</span>`;
+        el.innerHTML = `<span>${getEmoji(food)}</span><span>${escapeHtml(food.name)} ${escapeHtml(formatQuantity(food))}</span>${food.needsDetails ? '<span class="pending-star" aria-label="날짜 정보 입력 필요">*</span>' : ''}`;
         el.addEventListener("click", (event) => {
           event.stopPropagation();
           openEditModal(food.id);
@@ -2409,12 +2825,167 @@
     }
 
     function bindFoodRows() {
-      document.querySelectorAll("[data-edit-id]").forEach(row => {
-        row.onclick = () => openEditModal(row.dataset.editId);
-        row.onkeydown = (event) => {
-          if (event.key === "Enter") openEditModal(row.dataset.editId);
-        };
+      document.querySelectorAll("[data-edit-button]").forEach(button => {
+        button.addEventListener("click", event => {
+          event.preventDefault();
+          event.stopPropagation();
+          openEditModal(button.dataset.editButton);
+        });
       });
+    }
+
+
+    let selectedScanFile = null;
+
+    function clearScanSelection() {
+      selectedScanFile = null;
+      const preview = document.getElementById("scanPreview");
+      const image = document.getElementById("scanPreviewImage");
+      const fileInput = document.getElementById("foodPhotoInput");
+      const cameraInput = document.getElementById("foodCameraInput");
+      if (preview) preview.classList.remove("show");
+      if (image) image.removeAttribute("src");
+      if (fileInput) fileInput.value = "";
+      if (cameraInput) cameraInput.value = "";
+    }
+
+    async function compressImageToDataUrl(file) {
+      if (!file?.type?.startsWith("image/")) throw new Error("이미지 파일만 업로드할 수 있어요.");
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        const image = await new Promise((resolve, reject) => {
+          const element = new Image();
+          element.onload = () => resolve(element);
+          element.onerror = () => reject(new Error("이미지를 읽지 못했어요."));
+          element.src = objectUrl;
+        });
+        const maxSize = 1600;
+        const ratio = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+        const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+        const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0, width, height);
+        return canvas.toDataURL("image/jpeg", 0.82);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+
+    function handleSelectedScanFile(file) {
+      if (!file) return;
+      selectedScanFile = file;
+      const preview = document.getElementById("scanPreview");
+      const image = document.getElementById("scanPreviewImage");
+      const name = document.getElementById("scanFileName");
+      const status = document.getElementById("scanStatus");
+      if (image) image.src = URL.createObjectURL(file);
+      if (name) name.textContent = file.name || "카메라 촬영 이미지";
+      if (status) status.textContent = "스캔하면 인식된 재료가 냉장고에 임시 등록됩니다.";
+      if (preview) preview.classList.add("show");
+    }
+
+    async function scanSelectedPhoto() {
+      if (isGuestUser()) {
+        openToast("회원가입이 필요한 기능이에요!");
+        openSignupModal("fridge", "feature");
+        return;
+      }
+      if (!selectedScanFile) {
+        openToast("먼저 사진을 선택해 주세요.");
+        return;
+      }
+
+      const status = document.getElementById("scanStatus");
+      const button = document.getElementById("scanPhotoBtn");
+      try {
+        if (button) button.disabled = true;
+        if (status) status.textContent = "사진을 분석하고 있어요…";
+        const imageDataUrl = await compressImageToDataUrl(selectedScanFile);
+        const { data, error } = await supabase.functions.invoke("scan-food-image", {
+          body: { imageDataUrl }
+        });
+        if (error) throw error;
+        const items = Array.isArray(data?.items) ? data.items : [];
+        if (!items.length) throw new Error("사진에서 식재료를 찾지 못했어요.");
+
+        const rows = items.slice(0, 20).map(item => {
+          const name = String(item.name || "").trim();
+          const category = ["채소","과일","육류","해산물","유제품","냉동식품","음료/소스","기타"].includes(item.category)
+            ? item.category
+            : guessCategoryByName(name);
+          return {
+            user_id: currentSession.user.id,
+            name,
+            category,
+            stored_date: null,
+            expiry_date: null,
+            location: resolveAutoLocation(name, category),
+            quantity: Math.max(1, Number(item.quantity) || 1),
+            unit: String(item.unit || "개"),
+            needs_details: true,
+            source: "scan"
+          };
+        }).filter(row => row.name);
+
+        const { data: inserted, error: insertError } = await supabase
+          .from("foods")
+          .insert(rows)
+          .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at");
+        if (insertError) throw insertError;
+
+        foods.push(...(inserted || []).map(mapFoodRow));
+        fridgeWrap.classList.add("open");
+        render();
+        clearScanSelection();
+        openToast(`${inserted?.length || 0}개 재료를 스캔했어요. 빨간 *를 눌러 유통기한을 입력해 주세요.`);
+      } catch (error) {
+        console.error("사진 스캔 실패", error);
+        if (status) status.textContent = error?.message || "사진 스캔에 실패했어요.";
+        openToast("사진 스캔에 실패했어요. 스캔 함수와 API 키를 확인해 주세요.");
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    function getExpiringSoonCount() {
+      return foods.filter(food => {
+        const days = getDaysLeft(food.expiryDate);
+        return typeof days === "number" && days >= 0 && days <= 3;
+      }).length;
+    }
+
+    function maybeShowExpiryAlert({ force = false } = {}) {
+      if (isGuestUser()) return;
+      const count = getExpiringSoonCount();
+      if (!count) return;
+      const todayKey = `${currentSession.user.id}:${todayValue()}`;
+      const previous = localStorage.getItem("fridge-expiry-alert-date");
+      if (!force && previous === todayKey) return;
+      localStorage.setItem("fridge-expiry-alert-date", todayKey);
+      const message = `유통기한이 얼마 남지 않은 음식이 ${count}개 있어요!`;
+      openToast(message);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("냉장고 생존기", { body: message, icon: "/favicon.ico" });
+      }
+    }
+
+    async function enableExpiryAlerts() {
+      if (isGuestUser()) return;
+      if (!("Notification" in window)) {
+        openToast("이 브라우저는 시스템 알림을 지원하지 않아요.");
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      renderAccountUI();
+      if (permission === "granted") {
+        openToast("알림을 켰어요.");
+        maybeShowExpiryAlert({ force: true });
+      } else {
+        openToast("브라우저 설정에서 알림 권한을 허용해 주세요.");
+      }
     }
 
     async function addFood(event) {
@@ -2428,10 +2999,19 @@
 
       const name = document.getElementById("foodName").value.trim();
       const category = document.getElementById("foodCategory").value;
-      const storedDate = document.getElementById("foodStoredDate").value || todayValue();
+      const quantity = Math.max(0.01, Number(document.getElementById("foodQuantity").value) || 1);
+      const unit = document.getElementById("foodUnit").value || "개";
+      const storedDate = document.getElementById("foodStoredDate").value || null;
       const expiryDate = document.getElementById("foodExpiry").value || null;
       const selectedLocation = document.getElementById("foodLocation").value;
-      if (!name || !category) return;
+      if (!name || !category || !expiryDate) {
+        openToast("식재료 이름·카테고리·유통기한을 입력해 주세요.");
+        return;
+      }
+      if (!validateFoodName(name)) {
+        openToast("식재료 이름으로 확인되지 않아요. 실제 음식 이름을 더 구체적으로 입력해 주세요.");
+        return;
+      }
 
       const location = selectedLocation === "auto" ? resolveAutoLocation(name, category) : selectedLocation;
       const { data, error } = await supabase
@@ -2442,9 +3022,13 @@
           category,
           stored_date: storedDate,
           expiry_date: expiryDate,
-          location
+          location,
+          quantity,
+          unit,
+          needs_details: false,
+          source: "manual"
         })
-        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at")
         .single();
 
       if (error) {
@@ -2469,8 +3053,10 @@
       document.getElementById("editStoredDate").value = food.storedDate || "";
       document.getElementById("editExpiry").value = food.expiryDate || "";
       document.getElementById("editLocation").value = food.location;
+      document.getElementById("editQuantity").value = String(food.quantity || 1);
+      document.getElementById("editUnit").value = food.unit || "개";
       document.getElementById("editTitle").textContent = `${getEmoji(food)} ${food.name}`;
-      document.getElementById("editSubtitle").textContent = `${getStatus(food).label} · ${getTip(food)}`;
+      document.getElementById("editSubtitle").textContent = food.needsDetails ? "사진 스캔 재료 · 유통기한 입력이 필요합니다." : `${getStatus(food).label} · ${getTip(food)}`;
       editModal.classList.add("open");
     }
 
@@ -2489,16 +3075,27 @@
       const updates = {
         name: document.getElementById("editName").value.trim(),
         category: document.getElementById("editCategory").value,
-        stored_date: document.getElementById("editStoredDate").value || todayValue(),
+        stored_date: document.getElementById("editStoredDate").value || null,
         expiry_date: document.getElementById("editExpiry").value || null,
-        location: document.getElementById("editLocation").value
+        location: document.getElementById("editLocation").value,
+        quantity: Math.max(0.01, Number(document.getElementById("editQuantity").value) || 1),
+        unit: document.getElementById("editUnit").value || "개",
+        needs_details: false
       };
+      if (!updates.expiry_date) {
+        openToast("유통기한은 필수 항목이에요.");
+        return;
+      }
+      if (!validateFoodName(updates.name)) {
+        openToast("식재료 이름으로 확인되지 않아요.");
+        return;
+      }
 
       const { data, error } = await supabase
         .from("foods")
         .update(updates)
         .eq("id", id)
-        .select("id, name, category, stored_date, expiry_date, location, created_at")
+        .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at")
         .single();
 
       if (error) {
@@ -2598,7 +3195,7 @@
     }
 
     function buildMenuSuggestions(meal, sourceFoods = foods, count = 3) {
-      const available = sortByUrgency(sourceFoods.length ? sourceFoods : foods);
+      const available = sortByUrgency((sourceFoods.length ? sourceFoods : foods).filter(food => !isExpiredFood(food)));
       const mealHint = meal.includes("아침") ? "아침" : meal.includes("점심") ? "점심" : meal.includes("저녁") ? "저녁" : "오늘";
       const userProvided = available.some(food => food.isUserProvided);
       const ideas = [];
@@ -2967,6 +3564,97 @@
       return `${toneLine}\n\n${sourceLine}\n\n` + suggestions.map((item, index) => `${index + 1}. ${item.title}\n- ${item.text}`).join("\n\n");
     }
 
+    async function loadChatThreads() {
+      if (isGuestUser()) {
+        chatThreads = [];
+        activeThreadId = null;
+        currentChatMessages = [];
+        renderChatSidebar();
+        return;
+      }
+      const { data, error } = await supabase
+        .from("chat_threads")
+        .select("id, title, created_at, updated_at")
+        .order("updated_at", { ascending: false });
+      if (error) {
+        console.error("대화 목록 조회 실패", error);
+        openToast("대화 기록을 불러오지 못했어요. 채팅 테이블 설정을 확인해 주세요.");
+        return;
+      }
+      chatThreads = data || [];
+      renderChatSidebar();
+      if (chatThreads.length) await openChatThread(chatThreads[0].id);
+      else startNewChat(false);
+    }
+
+    function renderChatSidebar() {
+      if (!chatThreadList) return;
+      if (!chatThreads.length) {
+        chatThreadList.innerHTML = `<div class="chat-empty-note">아직 저장된 대화가 없어요. 첫 질문을 보내면 자동 저장됩니다.</div>`;
+        return;
+      }
+      chatThreadList.innerHTML = chatThreads.map(thread => `
+        <button class="chat-thread-btn ${thread.id === activeThreadId ? "active" : ""}" type="button" data-thread-id="${thread.id}">${escapeHtml(thread.title || "새 대화")}</button>
+      `).join("");
+      chatThreadList.querySelectorAll("[data-thread-id]").forEach(button => {
+        button.addEventListener("click", () => void openChatThread(button.dataset.threadId));
+      });
+    }
+
+    async function openChatThread(threadId) {
+      activeThreadId = threadId;
+      renderChatSidebar();
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("id, role, content, created_at")
+        .eq("thread_id", threadId)
+        .order("created_at", { ascending: true });
+      if (error) {
+        console.error("대화 조회 실패", error);
+        openToast("대화를 불러오지 못했어요.");
+        return;
+      }
+      currentChatMessages = data || [];
+      messages.innerHTML = "";
+      if (!currentChatMessages.length) addMessage("bot", buildWelcomeMessage());
+      else currentChatMessages.forEach(item => addMessage(item.role === "assistant" ? "bot" : "user", item.content));
+    }
+
+    function startNewChat(clear = true) {
+      activeThreadId = null;
+      currentChatMessages = [];
+      if (clear) messages.innerHTML = "";
+      if (!messages.children.length) addMessage("bot", buildWelcomeMessage());
+      renderChatSidebar();
+    }
+
+    async function ensureChatThread(firstMessage) {
+      if (activeThreadId) return activeThreadId;
+      const title = String(firstMessage || "새 대화").trim().slice(0, 28) || "새 대화";
+      const { data, error } = await supabase
+        .from("chat_threads")
+        .insert({ user_id: currentSession.user.id, title })
+        .select("id, title, created_at, updated_at")
+        .single();
+      if (error) throw error;
+      activeThreadId = data.id;
+      chatThreads.unshift(data);
+      renderChatSidebar();
+      return activeThreadId;
+    }
+
+    async function saveChatMessage(threadId, role, content) {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .insert({ thread_id: threadId, user_id: currentSession.user.id, role, content })
+        .select("id, role, content, created_at")
+        .single();
+      if (error) throw error;
+      currentChatMessages.push(data);
+      await supabase.from("chat_threads").update({ updated_at: new Date().toISOString() }).eq("id", threadId);
+      return data;
+    }
+
     function addMessage(role, text) {
       const el = document.createElement("div");
       el.className = `message ${role}`;
@@ -2975,7 +3663,7 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function handleChat(event) {
+    async function handleChat(event) {
       event.preventDefault();
       const input = document.getElementById("chatInput");
       const text = input.value.trim();
@@ -2988,9 +3676,49 @@
         return;
       }
 
-      addMessage("user", text);
+      const usableFoods = getUsableFoods();
+      if (!usableFoods.length) {
+        addMessage("user", text);
+        addMessage("bot", "냉장고에 음식이 준비되어 있지 않아요!");
+        input.value = "";
+        return;
+      }
+
       input.value = "";
-      setTimeout(() => addMessage("bot", botReply(text)), 260);
+      const submitButton = chatForm.querySelector('button[type="submit"]');
+      try {
+        if (submitButton) submitButton.disabled = true;
+        const threadId = await ensureChatThread(text);
+        addMessage("user", text);
+        await saveChatMessage(threadId, "user", text);
+        const history = currentChatMessages.slice(0, -1).slice(-12).map(item => ({ role: item.role, content: item.content }));
+        const { data, error } = await supabase.functions.invoke("menu-chat", {
+          body: {
+            message: text,
+            history,
+            foods: usableFoods.map(food => ({
+              name: food.name,
+              category: food.category,
+              quantity: food.quantity,
+              unit: food.unit,
+              expiryDate: food.expiryDate
+            }))
+          }
+        });
+        if (error) throw error;
+        const reply = String(data?.reply || "").trim();
+        if (!reply) throw new Error("AI 답변이 비어 있어요.");
+        addMessage("bot", reply);
+        await saveChatMessage(threadId, "assistant", reply);
+        chatThreads = chatThreads.map(thread => thread.id === threadId ? { ...thread, updated_at: new Date().toISOString() } : thread)
+          .sort((a,b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+        renderChatSidebar();
+      } catch (error) {
+        console.error("메뉴 추천 실패", error);
+        addMessage("bot", "메뉴 추천에 실패했어요. 잠시 뒤 다시 시도해 주세요.");
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
     }
 
     tabs.forEach(tab => tab.addEventListener("click", () => setView(tab.dataset.view)));
@@ -3027,6 +3755,11 @@
       setTimeout(() => document.getElementById("foodName").focus(), 260);
     });
     addFoodForm.addEventListener("submit", addFood);
+    document.getElementById("choosePhotoBtn").addEventListener("click", () => document.getElementById("foodPhotoInput").click());
+    document.getElementById("takePhotoBtn").addEventListener("click", () => document.getElementById("foodCameraInput").click());
+    document.getElementById("foodPhotoInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
+    document.getElementById("foodCameraInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
+    document.getElementById("scanPhotoBtn").addEventListener("click", scanSelectedPhoto);
 
     compartments.forEach(compartment => {
       compartment.addEventListener("dragover", (event) => {
@@ -3079,6 +3812,7 @@
       event.preventDefault();
       void saveNicknameFromAccountInput(true);
     });
+    document.getElementById("enableAlertsBtn").addEventListener("click", enableExpiryAlerts);
     document.getElementById("withdrawAccountBtn").addEventListener("click", withdrawAccount);
     document.getElementById("confirmWithdrawBtn").addEventListener("click", completeWithdrawAccount);
     document.getElementById("cancelWithdrawBtn").addEventListener("click", closeWithdrawConfirmModal);
@@ -3087,6 +3821,11 @@
       if (event.target === withdrawConfirmModal) closeWithdrawConfirmModal();
     });
 
+    document.getElementById("newChatBtn").addEventListener("click", () => startNewChat(true));
+    document.getElementById("closeRecipeModalBtn").addEventListener("click", closeRecipeModal);
+    recipeModal.addEventListener("click", event => {
+      if (event.target === recipeModal) closeRecipeModal();
+    });
     chatForm.addEventListener("submit", handleChat);
     resetAddFoodForm();
 
