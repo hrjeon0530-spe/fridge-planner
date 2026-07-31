@@ -1750,6 +1750,94 @@
       #addFoodForm { width: 100%; min-width: 0; }
     }
 
+
+    /* scan-first ingredient entry */
+    .scan-first-panel { display: grid; gap: 18px; }
+    .scan-upload-hero {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,122,89,.10), rgba(255,190,61,.14));
+      border: 1px solid rgba(255,122,89,.22);
+    }
+    .scan-upload-copy { display: flex; gap: 13px; align-items: center; }
+    .scan-upload-copy strong { display: block; font-size: 16px; line-height: 1.4; }
+    .scan-upload-copy p { margin: 3px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .scan-upload-icon {
+      width: 48px; height: 48px; border-radius: 17px; display: grid; place-items: center;
+      background: rgba(255,255,255,.82); border: 1px solid var(--line); font-size: 22px; flex: 0 0 auto;
+    }
+    .scan-main-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .scan-main-actions button { width: 100%; }
+    .scan-results {
+      padding: 16px; border: 1px solid var(--line); border-radius: 22px;
+      background: rgba(255,255,255,.68);
+    }
+    .scan-results[hidden] { display: none; }
+    .scan-results-head, .recent-food-head {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px;
+    }
+    .scan-results-head h3, .recent-food-head h3 { margin: 0; font-size: 17px; }
+    .scan-results-head p, .recent-food-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .text-btn { border: 0; background: transparent; color: #d85b3d; font-weight: 900; padding: 5px; }
+    .scan-candidate-list { display: grid; gap: 9px; }
+    .scan-candidate {
+      display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 9px; align-items: center;
+      padding: 10px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.86);
+    }
+    .scan-candidate-check { width: 19px; height: 19px; accent-color: #ff7a59; }
+    .scan-candidate-main { min-width: 0; display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 8px; }
+    .scan-candidate-emoji { font-size: 20px; }
+    .scan-candidate-name {
+      min-width: 0; width: 100%; padding: 8px 9px; border-radius: 11px; border: 1px solid transparent;
+      background: transparent; font-weight: 900;
+    }
+    .scan-candidate-name:focus { background: white; border-color: rgba(255,122,89,.45); }
+    .scan-candidate-remove {
+      width: 34px; height: 34px; border-radius: 11px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.7); color: var(--muted); font-weight: 950;
+    }
+    .scan-result-actions { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 9px; margin-top: 13px; }
+    .recent-food-section { padding-top: 2px; }
+    .recent-food-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .recent-food-chip {
+      border: 1px solid var(--line); background: rgba(255,255,255,.76); color: var(--ink);
+      border-radius: 999px; padding: 9px 12px; font-weight: 850; font-size: 13px;
+    }
+    .recent-food-chip:hover { border-color: rgba(255,122,89,.38); background: white; }
+    .recent-food-empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+    .manual-add-details { border-top: 1px solid rgba(36,49,61,.10); padding-top: 4px; }
+    .manual-add-details > summary {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; padding: 12px 2px; font-weight: 950;
+    }
+    .manual-add-details > summary::-webkit-details-marker, .optional-fields > summary::-webkit-details-marker { display: none; }
+    .manual-add-details > summary::after { content: '＋'; color: var(--muted); font-size: 19px; }
+    .manual-add-details[open] > summary::after { content: '−'; }
+    .manual-add-details summary small { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .manual-name-field { display: grid; gap: 7px; color: var(--muted); font-weight: 900; font-size: 13px; }
+    .manual-name-field input { font-size: 16px; }
+    .optional-fields { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .optional-fields > summary {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 10px;
+      padding: 12px 13px; color: var(--ink); font-weight: 850; background: rgba(255,255,255,.52);
+    }
+    .optional-fields > summary::after { content: '▾'; color: var(--muted); }
+    .optional-fields[open] > summary::after { content: '▴'; }
+    .optional-form-grid { padding: 13px; }
+    .manual-form-actions { margin-top: 12px; }
+
+    @media (max-width: 760px) {
+      .scan-main-actions, .scan-result-actions { grid-template-columns: 1fr; }
+      .scan-preview { grid-template-columns: 60px minmax(0,1fr); }
+      .scan-preview img { width: 60px; height: 60px; }
+      .scan-candidate { grid-template-columns: auto minmax(0,1fr) auto; padding: 9px; }
+      .scan-upload-hero { padding: 14px; }
+      .manual-add-details > summary { align-items: flex-start; flex-direction: column; gap: 3px; position: relative; padding-right: 28px; }
+      .manual-add-details > summary::after { position: absolute; right: 2px; top: 11px; }
+    }
+
   </style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
 </head>
@@ -1772,7 +1860,7 @@
 
       <div class="quick-actions">
         <button class="ghost-btn account-btn" id="openAccountBtn" type="button">👤 내 계정</button>
-        <button class="primary-btn" id="openAddBtn" type="button">+ 재료 추가</button>
+        <button class="primary-btn" id="openAddBtn" type="button">📷 사진으로 추가</button>
       </div>
     </header>
 
@@ -1877,7 +1965,7 @@
                 <strong>아직 냉장고가 비어 있어요.</strong>
                 재료를 추가하면 이곳에 냉장고가 나타나고, 유통기한 상태에 따라 재료 모습이 달라집니다.
                 <div class="form-actions" style="justify-content:center; margin-top:18px;">
-                  <button class="primary-btn" id="emptyAddFocusBtn" type="button">첫 재료 추가하기</button>
+                  <button class="primary-btn" id="emptyAddFocusBtn" type="button">사진으로 첫 재료 추가</button>
                 </div>
               </div>
             </div>
@@ -1941,94 +2029,136 @@
           </section>
 
           <aside class="fridge-side-panel">
-            <section class="panel">
+            <section class="panel scan-first-panel" id="ingredientEntryPanel">
               <div class="panel-title">
                 <div>
-                  <h2>재료 추가</h2>
-                  <div class="muted">계란은 계란칸, 음료·소스는 도어포켓, 채소는 서랍칸으로 자동 배치됩니다.</div>
+                  <h2>사진으로 한 번에 추가</h2>
+                  <div class="muted">AI가 재료 이름과 위치를 먼저 채웁니다. 사용자는 맞는 항목만 확인하면 됩니다.</div>
                 </div>
               </div>
-              <form id="addFoodForm">
-                <div class="form-grid">
-                  <label>식재료 이름
-                    <input id="foodName" type="text" placeholder="예: 두부, 계란, 우유" required />
-                  </label>
-                  <label>카테고리
-                    <select id="foodCategory" required>
-                      <option value="">선택</option>
-                      <option value="채소">채소</option>
-                      <option value="과일">과일</option>
-                      <option value="육류">육류</option>
-                      <option value="해산물">해산물</option>
-                      <option value="유제품">유제품</option>
-                      <option value="냉동식품">냉동식품</option>
-                      <option value="음료/소스">음료/소스</option>
-                      <option value="기타">기타</option>
-                    </select>
-                  </label>
-                  <label>수량
-                    <div class="quantity-unit-grid">
-                      <input id="foodQuantity" type="number" min="0.01" step="0.01" value="1" required />
-                      <select id="foodUnit">
-                        <option value="개">개</option>
-                        <option value="팩">팩</option>
-                        <option value="봉">봉</option>
-                        <option value="병">병</option>
-                        <option value="캔">캔</option>
-                        <option value="통">통</option>
-                        <option value="묶음">묶음</option>
-                        <option value="장">장</option>
-                        <option value="조각">조각</option>
-                      </select>
-                    </div>
-                  </label>
-                  <label>냉장고에 넣은 날짜 (선택)
-                    <div class="date-control">
-                      <input id="foodStoredDate" type="date" />
-                    </div>
-                  </label>
-                  <label>유통기한 <span class="required-star">*</span>
-                    <div class="date-control">
-                      <input id="foodExpiry" type="date" required />
-                    </div>
-                  </label>
-                  <label>위치
-                    <select id="foodLocation">
-                      <option value="auto">자동 배치</option>
-                      <option value="top">윗칸</option>
-                      <option value="egg">계란칸</option>
-                      <option value="middle">중간칸</option>
-                      <option value="drawer">야채서랍</option>
-                      <option value="door">도어포켓</option>
-                      <option value="freezer">냉동서랍</option>
-                    </select>
-                  </label>
-                  <div class="upload-field">
-                    <span>업로드</span>
-                    <div class="upload-box">
-                      <div class="upload-actions">
-                        <button class="ghost-btn" id="choosePhotoBtn" type="button">사진 선택</button>
-                        <button class="ghost-btn mobile-camera-only" id="takePhotoBtn" type="button" hidden>카메라 촬영</button>
-                      </div>
-                      <input id="foodPhotoInput" type="file" accept="image/*" hidden />
-                      <input id="foodCameraInput" type="file" accept="image/*" capture="environment" hidden />
-                      <div class="scan-preview" id="scanPreview">
-                        <img id="scanPreviewImage" alt="업로드한 식재료 사진 미리보기" />
-                        <div>
-                          <strong id="scanFileName">선택된 사진</strong>
-                          <div class="scan-status" id="scanStatus">사진을 확인한 뒤 스캔을 눌러주세요.</div>
-                          <button class="primary-btn" id="scanPhotoBtn" type="button" style="margin-top:8px;">사진 스캔</button>
-                        </div>
-                      </div>
-                    </div>
+
+              <div class="scan-upload-hero" id="scanUploadHero">
+                <div class="scan-upload-copy">
+                  <span class="scan-upload-icon" aria-hidden="true">📷</span>
+                  <div>
+                    <strong>냉장고나 장 본 재료를 찍어 주세요</strong>
+                    <p>여러 재료를 한 장에 담아도 한꺼번에 찾습니다.</p>
                   </div>
                 </div>
-                <div class="form-actions">
-                  <button class="primary-btn" type="submit">냉장고에 넣기</button>
-                  <button class="ghost-btn" id="openFridgeBtn" type="button">냉장고 열기/닫기</button>
+                <div class="upload-actions scan-main-actions">
+                  <button class="primary-btn" id="choosePhotoBtn" type="button">사진 선택</button>
+                  <button class="ghost-btn mobile-camera-only" id="takePhotoBtn" type="button" hidden>카메라 촬영</button>
                 </div>
-                <p class="tiny-note">데스크톱에서는 재료를 드래그해서 칸을 바꿀 수 있고, 모바일에서는 재료 클릭 후 위치를 바꾸면 됩니다.</p>
-              </form>
+                <input id="foodPhotoInput" type="file" accept="image/*" hidden />
+                <input id="foodCameraInput" type="file" accept="image/*" capture="environment" hidden />
+                <div class="scan-preview" id="scanPreview">
+                  <img id="scanPreviewImage" alt="업로드한 식재료 사진 미리보기" />
+                  <div>
+                    <strong id="scanFileName">선택된 사진</strong>
+                    <div class="scan-status" id="scanStatus">사진을 확인한 뒤 스캔을 눌러주세요.</div>
+                    <button class="primary-btn" id="scanPhotoBtn" type="button" style="margin-top:8px;">재료 찾기</button>
+                  </div>
+                </div>
+              </div>
+
+              <section class="scan-results" id="scanResults" hidden aria-live="polite">
+                <div class="scan-results-head">
+                  <div>
+                    <h3>찾은 재료 확인</h3>
+                    <p id="scanResultSummary">맞는 재료만 선택해 주세요.</p>
+                  </div>
+                  <button class="text-btn" id="selectAllScanBtn" type="button">전체 선택</button>
+                </div>
+                <div class="scan-candidate-list" id="scanCandidateList"></div>
+                <div class="scan-result-actions">
+                  <button class="primary-btn" id="addScannedFoodsBtn" type="button">선택한 재료 모두 추가</button>
+                  <button class="ghost-btn" id="clearScanResultsBtn" type="button">다시 촬영</button>
+                </div>
+              </section>
+
+              <section class="recent-food-section" aria-labelledby="recentFoodTitle">
+                <div class="recent-food-head">
+                  <div>
+                    <h3 id="recentFoodTitle">최근 재료 빠른 추가</h3>
+                    <p>자주 쓰는 재료는 다시 입력하지 않아도 됩니다.</p>
+                  </div>
+                </div>
+                <div class="recent-food-chips" id="recentFoodChips"></div>
+              </section>
+
+              <details class="manual-add-details" id="manualAddDetails">
+                <summary>
+                  <span>직접 입력하기</span>
+                  <small>사진에 없는 재료만 간단히 추가</small>
+                </summary>
+                <form id="addFoodForm">
+                  <label class="manual-name-field">식재료 이름
+                    <input id="foodName" type="text" placeholder="예: 두부, 아이스크림, 우유" required />
+                  </label>
+
+                  <details class="optional-fields">
+                    <summary>수량·날짜 등 세부 정보 입력 <small>선택사항</small></summary>
+                    <div class="form-grid optional-form-grid">
+                      <label>카테고리
+                        <select id="foodCategory">
+                          <option value="">자동 분류</option>
+                          <option value="채소">채소</option>
+                          <option value="과일">과일</option>
+                          <option value="육류">육류</option>
+                          <option value="해산물">해산물</option>
+                          <option value="유제품">유제품</option>
+                          <option value="냉동식품">냉동식품</option>
+                          <option value="음료/소스">음료/소스</option>
+                          <option value="기타">기타</option>
+                        </select>
+                      </label>
+                      <label>수량
+                        <div class="quantity-unit-grid">
+                          <input id="foodQuantity" type="number" min="0.01" step="0.01" value="1" />
+                          <select id="foodUnit">
+                            <option value="개">개</option>
+                            <option value="팩">팩</option>
+                            <option value="봉">봉</option>
+                            <option value="병">병</option>
+                            <option value="캔">캔</option>
+                            <option value="통">통</option>
+                            <option value="묶음">묶음</option>
+                            <option value="장">장</option>
+                            <option value="조각">조각</option>
+                          </select>
+                        </div>
+                      </label>
+                      <label>냉장고에 넣은 날짜
+                        <div class="date-control">
+                          <input id="foodStoredDate" type="date" />
+                        </div>
+                      </label>
+                      <label>유통기한
+                        <div class="date-control">
+                          <input id="foodExpiry" type="date" />
+                        </div>
+                      </label>
+                      <label>위치
+                        <select id="foodLocation">
+                          <option value="auto">자동 배치</option>
+                          <option value="top">윗칸</option>
+                          <option value="egg">계란칸</option>
+                          <option value="middle">중간칸</option>
+                          <option value="drawer">야채서랍</option>
+                          <option value="door">도어포켓</option>
+                          <option value="freezer">냉동서랍</option>
+                        </select>
+                      </label>
+                    </div>
+                  </details>
+
+                  <div class="form-actions manual-form-actions">
+                    <button class="primary-btn" type="submit">이름만으로 바로 추가</button>
+                    <button class="ghost-btn" id="openFridgeBtn" type="button">냉장고 열기/닫기</button>
+                  </div>
+                </form>
+              </details>
+              <p class="tiny-note">재료 이름 외 정보는 나중에 재료를 눌러 수정할 수 있습니다.</p>
             </section>
 
             <section class="panel">
@@ -2545,11 +2675,10 @@
 
     function resetAddFoodForm() {
       addFoodForm.reset();
-      document.getElementById("foodStoredDate").value = "";
+      document.getElementById("foodStoredDate").value = todayValue();
       document.getElementById("foodLocation").value = "auto";
       document.getElementById("foodQuantity").value = "1";
       document.getElementById("foodUnit").value = "개";
-      clearScanSelection();
     }
 
     function uid() {
@@ -2636,7 +2765,7 @@
 
     function getTip(food) {
       const days = getDaysLeft(food.expiryDate);
-      if (food.needsDetails || days === null) return "사진 스캔으로 추가된 재료예요. 유통기한을 반드시 입력해 주세요.";
+      if (food.needsDetails || days === null) return "유통기한은 필요할 때 나중에 추가할 수 있어요.";
       if (days < 0) return "상태 확인 후 버릴지 결정하세요. 냉장고가 이미 힌트를 주는 중.";
       if (days === 0) return "오늘 안에 먹는 것을 추천합니다. 내일의 나는 믿지 않는 편이 안전합니다.";
       if (days <= 3) return "우선 소비 후보입니다. 메뉴 추천에서도 먼저 반영됩니다.";
@@ -2861,9 +2990,16 @@
       if (value.length < 1 || value.length > 40) return false;
       if (!/^[가-힣a-zA-Z0-9\s()\-]+$/.test(value)) return false;
       if (blockedFoodWords.some(word => normalized.includes(word))) return false;
+      if (/^\d+$/.test(normalized)) return false;
+
       const known = [...knownFoodNames, ...commonFoodValidationWords].sort((a,b) => b.length - a.length);
       if (known.some(word => normalized.includes(normalizeFoodText(word).replace(/\s+/g, "")))) return true;
       if (foodSuffixes.some(suffix => normalized.endsWith(suffix))) return true;
+
+      // 허용 목록에 없는 정상 식품명도 등록할 수 있도록 처리합니다.
+      // 모욕어·테스트 문구·특수문자 등 명백한 잘못된 입력만 차단합니다.
+      if (/^[가-힣]{2,20}$/.test(normalized)) return true;
+      if (/^[a-zA-Z][a-zA-Z0-9\-\s]{1,39}$/.test(value)) return true;
       return false;
     }
 
@@ -3184,6 +3320,7 @@
       renderRescueRecipes();
       renderFridgeItems();
       renderIngredientCloud();
+      renderRecentFoods();
       bindFoodRows();
     }
 
@@ -3199,6 +3336,91 @@
 
 
     let selectedScanFile = null;
+    let scanCandidates = [];
+
+    function recentFoodsStorageKey() {
+      const owner = currentSession?.user?.id || "guest";
+      return `fridge-recent-foods:${owner}`;
+    }
+
+    function readRecentFoods() {
+      try {
+        const data = JSON.parse(localStorage.getItem(recentFoodsStorageKey()) || "[]");
+        return Array.isArray(data) ? data.slice(0, 8) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function rememberRecentFoods(items) {
+      if (!Array.isArray(items) || !items.length) return;
+      const current = readRecentFoods();
+      const merged = [...items, ...current].reduce((result, item) => {
+        const name = String(item?.name || "").trim();
+        if (!name || result.some(saved => normalizeFoodText(saved.name) === normalizeFoodText(name))) return result;
+        result.push({
+          name,
+          category: item.category || guessCategoryByName(name),
+          unit: item.unit || "개"
+        });
+        return result;
+      }, []).slice(0, 8);
+      localStorage.setItem(recentFoodsStorageKey(), JSON.stringify(merged));
+      renderRecentFoods();
+    }
+
+    function renderRecentFoods() {
+      const container = document.getElementById("recentFoodChips");
+      if (!container) return;
+      const recent = readRecentFoods();
+      if (!recent.length) {
+        container.innerHTML = '<span class="recent-food-empty">재료를 한 번 추가하면 여기에 바로가기 버튼이 생겨요.</span>';
+        return;
+      }
+      container.innerHTML = recent.map((item, index) => {
+        const emoji = getEmoji({ name: item.name, category: item.category });
+        return `<button class="recent-food-chip" type="button" data-recent-food="${index}">${emoji} ${escapeHtml(item.name)} +</button>`;
+      }).join("");
+      container.querySelectorAll("[data-recent-food]").forEach(button => {
+        button.addEventListener("click", () => quickAddRecentFood(recent[Number(button.dataset.recentFood)]));
+      });
+    }
+
+    async function quickAddRecentFood(item) {
+      if (!item) return;
+      if (isGuestUser()) {
+        openToast("회원가입이 필요한 기능이에요!");
+        openSignupModal("fridge", "feature");
+        return;
+      }
+      const name = String(item.name || "").trim();
+      const category = item.category || guessCategoryByName(name);
+      const { data, error } = await supabase
+        .from("foods")
+        .insert({
+          user_id: currentSession.user.id,
+          name,
+          category,
+          stored_date: todayValue(),
+          expiry_date: null,
+          location: resolveAutoLocation(name, category),
+          quantity: 1,
+          unit: item.unit || "개",
+          needs_details: false,
+          source: "quick"
+        })
+        .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at")
+        .single();
+      if (error) {
+        console.error("빠른 재료 추가 실패", error);
+        openToast("재료를 추가하지 못했어요.");
+        return;
+      }
+      foods.push(mapFoodRow(data));
+      rememberRecentFoods([data]);
+      render();
+      openToast(`${name} 바로 추가 완료`);
+    }
 
     function clearScanSelection() {
       selectedScanFile = null;
@@ -3212,14 +3434,26 @@
       if (cameraInput) cameraInput.value = "";
     }
 
+    function clearScanResults({ keepPhoto = false } = {}) {
+      scanCandidates = [];
+      const results = document.getElementById("scanResults");
+      const list = document.getElementById("scanCandidateList");
+      if (results) results.hidden = true;
+      if (list) list.innerHTML = "";
+      if (!keepPhoto) clearScanSelection();
+    }
+
     async function compressImageToDataUrl(file) {
       if (!file?.type?.startsWith("image/")) throw new Error("이미지 파일만 업로드할 수 있어요.");
+      if (/heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name || "")) {
+        throw new Error("HEIC 사진은 아직 지원하지 않아요. JPG·PNG 또는 스크린샷을 선택해 주세요.");
+      }
       const objectUrl = URL.createObjectURL(file);
       try {
         const image = await new Promise((resolve, reject) => {
           const element = new Image();
           element.onload = () => resolve(element);
-          element.onerror = () => reject(new Error("이미지를 읽지 못했어요."));
+          element.onerror = () => reject(new Error("이미지를 읽지 못했어요. JPG·PNG 사진을 선택해 주세요."));
           element.src = objectUrl;
         });
         const maxSize = 1600;
@@ -3239,6 +3473,7 @@
 
     function handleSelectedScanFile(file) {
       if (!file) return;
+      clearScanResults({ keepPhoto: true });
       selectedScanFile = file;
       const preview = document.getElementById("scanPreview");
       const image = document.getElementById("scanPreviewImage");
@@ -3246,8 +3481,65 @@
       const status = document.getElementById("scanStatus");
       if (image) image.src = URL.createObjectURL(file);
       if (name) name.textContent = file.name || "카메라 촬영 이미지";
-      if (status) status.textContent = "스캔하면 인식된 재료가 냉장고에 임시 등록됩니다.";
+      if (status) status.textContent = "AI가 재료 후보를 찾으면 확인 화면을 보여드려요.";
       if (preview) preview.classList.add("show");
+    }
+
+    function updateScanResultSummary() {
+      const summary = document.getElementById("scanResultSummary");
+      const addButton = document.getElementById("addScannedFoodsBtn");
+      const selectedCount = scanCandidates.filter(item => item.selected).length;
+      if (summary) summary.textContent = `${scanCandidates.length}개를 찾았고 ${selectedCount}개가 선택됐어요.`;
+      if (addButton) {
+        addButton.disabled = selectedCount === 0;
+        addButton.textContent = selectedCount ? `선택한 ${selectedCount}개 재료 추가` : "추가할 재료를 선택해 주세요";
+      }
+    }
+
+    function renderScanCandidates() {
+      const results = document.getElementById("scanResults");
+      const list = document.getElementById("scanCandidateList");
+      if (!results || !list) return;
+      if (!scanCandidates.length) {
+        results.hidden = true;
+        list.innerHTML = "";
+        return;
+      }
+      results.hidden = false;
+      list.innerHTML = scanCandidates.map((item, index) => {
+        const emoji = getEmoji({ name: item.name, category: item.category });
+        return `<div class="scan-candidate" data-scan-candidate="${index}">
+          <input class="scan-candidate-check" type="checkbox" data-scan-select="${index}" ${item.selected ? "checked" : ""} aria-label="${escapeHtml(item.name)} 선택" />
+          <div class="scan-candidate-main">
+            <span class="scan-candidate-emoji" aria-hidden="true">${emoji}</span>
+            <input class="scan-candidate-name" type="text" value="${escapeHtml(item.name)}" data-scan-name="${index}" aria-label="재료 이름 수정" />
+          </div>
+          <button class="scan-candidate-remove" type="button" data-scan-remove="${index}" aria-label="${escapeHtml(item.name)} 삭제">×</button>
+        </div>`;
+      }).join("");
+
+      list.querySelectorAll("[data-scan-select]").forEach(input => {
+        input.addEventListener("change", () => {
+          const item = scanCandidates[Number(input.dataset.scanSelect)];
+          if (item) item.selected = input.checked;
+          updateScanResultSummary();
+        });
+      });
+      list.querySelectorAll("[data-scan-name]").forEach(input => {
+        input.addEventListener("input", () => {
+          const item = scanCandidates[Number(input.dataset.scanName)];
+          if (!item) return;
+          item.name = input.value;
+          item.category = guessCategoryByName(input.value);
+        });
+      });
+      list.querySelectorAll("[data-scan-remove]").forEach(button => {
+        button.addEventListener("click", () => {
+          scanCandidates.splice(Number(button.dataset.scanRemove), 1);
+          renderScanCandidates();
+        });
+      });
+      updateScanResultSummary();
     }
 
     async function scanSelectedPhoto() {
@@ -3265,7 +3557,7 @@
       const button = document.getElementById("scanPhotoBtn");
       try {
         if (button) button.disabled = true;
-        if (status) status.textContent = "사진을 분석하고 있어요…";
+        if (status) status.textContent = "사진에서 재료를 찾고 있어요…";
         const imageDataUrl = await compressImageToDataUrl(selectedScanFile);
         const { data, error } = await supabase.functions.invoke("scan-food-image", {
           body: { imageDataUrl }
@@ -3274,40 +3566,75 @@
         const items = Array.isArray(data?.items) ? data.items : [];
         if (!items.length) throw new Error("사진에서 식재료를 찾지 못했어요.");
 
-        const rows = items.slice(0, 20).map(item => {
+        scanCandidates = items.slice(0, 20).map(item => {
           const name = String(item.name || "").trim();
           const category = ["채소","과일","육류","해산물","유제품","냉동식품","음료/소스","기타"].includes(item.category)
             ? item.category
             : guessCategoryByName(name);
           return {
-            user_id: currentSession.user.id,
             name,
             category,
-            stored_date: null,
-            expiry_date: null,
-            location: resolveAutoLocation(name, category),
             quantity: Math.max(1, Number(item.quantity) || 1),
             unit: String(item.unit || "개"),
-            needs_details: true,
-            source: "scan"
+            selected: Boolean(name)
           };
-        }).filter(row => row.name);
+        }).filter(item => item.name && validateFoodName(item.name));
+        if (!scanCandidates.length) throw new Error("등록할 수 있는 식재료를 찾지 못했어요.");
+        renderScanCandidates();
+        if (status) status.textContent = "찾은 재료를 확인한 뒤 한 번에 추가해 주세요.";
+        document.getElementById("scanResults")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } catch (error) {
+        console.error("사진 스캔 실패", error);
+        const message = error?.message || "사진 스캔에 실패했어요.";
+        if (status) status.textContent = message;
+        openToast(message);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
 
-        const { data: inserted, error: insertError } = await supabase
+    async function addSelectedScanCandidates() {
+      if (isGuestUser()) {
+        openSignupModal("fridge", "feature");
+        return;
+      }
+      const selected = scanCandidates
+        .filter(item => item.selected)
+        .map(item => ({ ...item, name: String(item.name || "").trim() }))
+        .filter(item => item.name && validateFoodName(item.name));
+      if (!selected.length) {
+        openToast("추가할 재료를 선택해 주세요.");
+        return;
+      }
+      const button = document.getElementById("addScannedFoodsBtn");
+      try {
+        if (button) button.disabled = true;
+        const rows = selected.map(item => ({
+          user_id: currentSession.user.id,
+          name: item.name,
+          category: item.category || guessCategoryByName(item.name),
+          stored_date: todayValue(),
+          expiry_date: null,
+          location: resolveAutoLocation(item.name, item.category || guessCategoryByName(item.name)),
+          quantity: Math.max(.01, Number(item.quantity) || 1),
+          unit: item.unit || "개",
+          needs_details: false,
+          source: "scan"
+        }));
+        const { data: inserted, error } = await supabase
           .from("foods")
           .insert(rows)
           .select("id, name, category, stored_date, expiry_date, location, quantity, unit, needs_details, source, created_at");
-        if (insertError) throw insertError;
-
+        if (error) throw error;
         foods.push(...(inserted || []).map(mapFoodRow));
+        rememberRecentFoods(inserted || rows);
         fridgeWrap.classList.add("open");
+        clearScanResults();
         render();
-        clearScanSelection();
-        openToast(`${inserted?.length || 0}개 재료를 스캔했어요. 빨간 *를 눌러 유통기한을 입력해 주세요.`);
+        openToast(`${inserted?.length || rows.length}개 재료를 한 번에 추가했어요.`);
       } catch (error) {
-        console.error("사진 스캔 실패", error);
-        if (status) status.textContent = error?.message || "사진 스캔에 실패했어요.";
-        openToast("사진 스캔에 실패했어요. 스캔 함수와 API 키를 확인해 주세요.");
+        console.error("스캔 재료 저장 실패", error);
+        openToast("선택한 재료를 저장하지 못했어요.");
       } finally {
         if (button) button.disabled = false;
       }
@@ -3361,14 +3688,15 @@
       }
 
       const name = document.getElementById("foodName").value.trim();
-      const category = document.getElementById("foodCategory").value;
+      const selectedCategory = document.getElementById("foodCategory").value;
+      const category = selectedCategory || guessCategoryByName(name);
       const quantity = Math.max(0.01, Number(document.getElementById("foodQuantity").value) || 1);
       const unit = document.getElementById("foodUnit").value || "개";
-      const storedDate = document.getElementById("foodStoredDate").value || null;
+      const storedDate = document.getElementById("foodStoredDate").value || todayValue();
       const expiryDate = document.getElementById("foodExpiry").value || null;
       const selectedLocation = document.getElementById("foodLocation").value;
-      if (!name || !category || !expiryDate) {
-        openToast("식재료 이름·카테고리·유통기한을 입력해 주세요.");
+      if (!name) {
+        openToast("식재료 이름만 입력해 주세요.");
         return;
       }
       if (!validateFoodName(name)) {
@@ -3401,6 +3729,7 @@
       }
 
       foods.push(mapFoodRow(data));
+      rememberRecentFoods([data]);
       resetAddFoodForm();
       fridgeWrap.classList.add("open");
       render();
@@ -3419,7 +3748,7 @@
       document.getElementById("editQuantity").value = String(food.quantity || 1);
       document.getElementById("editUnit").value = food.unit || "개";
       document.getElementById("editTitle").textContent = `${getEmoji(food)} ${food.name}`;
-      document.getElementById("editSubtitle").textContent = food.needsDetails ? "사진 스캔 재료 · 유통기한 입력이 필요합니다." : `${getStatus(food).label} · ${getTip(food)}`;
+      document.getElementById("editSubtitle").textContent = `${getStatus(food).label} · ${getTip(food)}`;
       editModal.classList.add("open");
     }
 
@@ -3519,7 +3848,7 @@
         { category: "유제품", keywords: ["요거트", "치즈", "버터", "크림", "계란", "달걀", "우유"] },
         { category: "육류", keywords: ["닭가슴살", "돼지고기", "불고기", "소고기", "소시지", "베이컨", "닭고기", "스팸", "고기", "햄", "닭"] },
         { category: "해산물", keywords: ["오징어", "고등어", "생선", "참치캔", "연어", "새우", "참치"] },
-        { category: "냉동식품", keywords: ["냉동만두", "냉동피자", "냉동", "만두", "피자"] },
+        { category: "냉동식품", keywords: ["아이스크림", "젤라또", "빙수", "냉동만두", "냉동피자", "냉동", "만두", "피자"] },
         { category: "과일", keywords: ["복숭아", "바나나", "딸기", "사과", "포도", "레몬", "키위", "귤"] },
         { category: "채소", keywords: ["브로콜리", "콩나물", "시금치", "양배추", "양상추", "애호박", "고구마", "토마토", "대파", "양파", "상추", "마늘", "버섯", "감자", "당근", "숙주", "고추", "오이", "호박", "파"] },
         { category: "기타", keywords: ["스파게티", "파스타", "식빵", "토스트", "라면", "국수", "떡", "면", "밥", "햇반"] }
@@ -4211,11 +4540,11 @@
     document.getElementById("openFridgeBtn").addEventListener("click", () => fridgeWrap.classList.toggle("open"));
     document.getElementById("openAddBtn").addEventListener("click", () => {
       setView("fridge");
-      setTimeout(() => document.getElementById("foodName").focus(), 80);
+      setTimeout(() => document.getElementById("scanUploadHero")?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
     });
     document.getElementById("emptyAddFocusBtn").addEventListener("click", () => {
-      document.getElementById("foodName").scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => document.getElementById("foodName").focus(), 260);
+      setView("fridge");
+      setTimeout(() => document.getElementById("scanUploadHero")?.scrollIntoView({ behavior: "smooth", block: "center" }), 120);
     });
     addFoodForm.addEventListener("submit", addFood);
     document.getElementById("choosePhotoBtn").addEventListener("click", () => document.getElementById("foodPhotoInput").click());
@@ -4230,6 +4559,14 @@
     document.getElementById("foodPhotoInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
     document.getElementById("foodCameraInput").addEventListener("change", event => handleSelectedScanFile(event.target.files?.[0]));
     document.getElementById("scanPhotoBtn").addEventListener("click", scanSelectedPhoto);
+    document.getElementById("addScannedFoodsBtn").addEventListener("click", addSelectedScanCandidates);
+    document.getElementById("clearScanResultsBtn").addEventListener("click", () => clearScanResults());
+    document.getElementById("selectAllScanBtn").addEventListener("click", () => {
+      const shouldSelect = scanCandidates.some(item => !item.selected);
+      scanCandidates.forEach(item => item.selected = shouldSelect);
+      renderScanCandidates();
+    });
+    document.getElementById("foodStoredDate").value = todayValue();
 
     compartments.forEach(compartment => {
       compartment.addEventListener("dragover", (event) => {
