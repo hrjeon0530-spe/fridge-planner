@@ -2318,21 +2318,22 @@
     <div class="modal-card">
       <div class="modal-head">
         <div>
-          <h2 id="signupTitle">잠시만요!</h2>
-          <div class="muted" id="signupSubtitle">로그인하지 않으면 냉장고 기록을 저장할 수 없어요.</div>
+          <h2 id="signupTitle">로그인</h2>
+          <div class="muted" id="signupSubtitle">가입한 Google 계정으로 로그인해 주세요.</div>
         </div>
         <button class="close-btn" id="closeSignupBtn" type="button">×</button>
       </div>
-      <p class="signup-copy" id="signupMessage">Google로 로그인하면 기기를 바꿔도 같은 계정의 냉장고 기록을 이어서 볼 수 있습니다.</p>
-      <div class="provider-grid provider-only-actions" aria-label="회원가입 경로 선택">
-        <button class="provider-btn google" type="button" data-provider="Google">🔎 Google로 계속하기</button>
+      <p class="signup-copy" id="signupMessage">로그인하면 냉장고 기록과 메뉴 추천 대화를 이어서 볼 수 있어요.</p>
+      <div class="provider-grid provider-only-actions" aria-label="로그인 또는 회원가입 경로 선택">
+        <button class="provider-btn google" id="googleAuthBtn" type="button">🔎 Google로 로그인</button>
         <button class="provider-btn naver" type="button" disabled aria-disabled="true">N Naver 준비 중</button>
         <button class="provider-btn kakao" type="button" disabled aria-disabled="true">💬 Kakao 준비 중</button>
       </div>
       <div class="form-actions">
+        <button class="ghost-btn" id="switchAuthModeBtn" type="button">처음이신가요? 회원가입</button>
         <button class="ghost-btn" id="skipSignupBtn" type="button">나중에 할게요</button>
       </div>
-      <div class="signup-note">Google 로그인은 실제 Google 계정과 연결됩니다. Naver·Kakao 로그인은 현재 준비 중입니다.</div>
+      <div class="signup-note" id="authModeNote">등록되지 않은 계정으로 로그인하면 회원가입 안내로 전환됩니다.</div>
     </div>
   </div>
 
@@ -2371,7 +2372,7 @@
           <button class="ghost-btn" id="enableAlertsBtn" type="button">알림 켜기</button>
           <button class="danger-btn" id="withdrawAccountBtn" type="button">회원 탈퇴</button>
         </div>
-        <div class="notification-note">현재 알림은 웹사이트를 열었을 때 임박 재료 수를 알려줍니다. 실제 모바일 푸시는 별도 PWA·푸시 서버 설정이 필요합니다.</div>
+        <div class="notification-note" id="notificationNote">현재 알림은 웹사이트를 열었을 때 임박 재료 수를 알려줍니다. 실제 모바일 푸시는 별도 PWA·푸시 서버 설정이 필요합니다.</div>
         <div class="account-help" id="accountHelp">닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.</div>
       </form>
     </div>
@@ -2403,6 +2404,7 @@
     const LEGACY_STORAGE_KEY = "fridge-survival-tabs-v4";
     const LEGACY_AUTH_KEY = "fridge-survival-auth-v1";
     const SIGNUP_NUDGE_KEY = "fridge-survival-signup-nudge-v1";
+    const AUTH_INTENT_KEY = "fridge-survival-auth-intent-v1";
     const CHAT_KEY = "fridge-survival-chat-v1";
     let foods = [];
     let currentSession = null;
@@ -2411,6 +2413,7 @@
     let currentListFilter = "all";
     let draggedId = null;
     let pendingView = null;
+    let currentAuthMode = "login";
     let signupNudgeShown = sessionStorage.getItem(SIGNUP_NUDGE_KEY) === "1";
     let sessionApplySequence = 0;
     let chatThreads = [];
@@ -2664,6 +2667,71 @@
       }
     }
 
+    async function getRegistrationProfile(userId) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data || null;
+    }
+
+    async function createRegistrationProfile(user) {
+      const { error } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email || null
+        });
+
+      if (error) throw error;
+    }
+
+    async function resolveRegistrationSession(session) {
+      if (!session?.user) return { session: null, status: "guest" };
+
+      const intent = localStorage.getItem(AUTH_INTENT_KEY);
+
+      try {
+        const profile = await getRegistrationProfile(session.user.id);
+        if (profile) {
+          localStorage.removeItem(AUTH_INTENT_KEY);
+          return { session, status: "registered" };
+        }
+
+        if (intent === "signup") {
+          await createRegistrationProfile(session.user);
+          localStorage.removeItem(AUTH_INTENT_KEY);
+          return { session, status: "registered", justSignedUp: true };
+        }
+
+        localStorage.removeItem(AUTH_INTENT_KEY);
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        return { session: null, status: "unregistered" };
+      } catch (error) {
+        console.error("회원가입 상태 확인 실패", error);
+        localStorage.removeItem(AUTH_INTENT_KEY);
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        return { session: null, status: "registration_error", error };
+      }
+    }
+
+    async function startGoogleAuth(mode = "login") {
+      localStorage.setItem(AUTH_INTENT_KEY, mode === "signup" ? "signup" : "login");
+      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo }
+      });
+      if (error) {
+        localStorage.removeItem(AUTH_INTENT_KEY);
+        console.error("Google 인증 실패", error);
+        openToast(`Google 인증 실패: ${error.message}`);
+      }
+    }
+
     function formatDateLabel(value) {
       return value || "미입력";
     }
@@ -2794,26 +2862,48 @@
     }
 
 
+    function setAuthModalMode(mode, reason = "default") {
+      currentAuthMode = mode === "signup" ? "signup" : "login";
+      const titleEl = document.getElementById("signupTitle");
+      const subtitleEl = document.getElementById("signupSubtitle");
+      const messageEl = document.getElementById("signupMessage");
+      const googleBtn = document.getElementById("googleAuthBtn");
+      const switchBtn = document.getElementById("switchAuthModeBtn");
+      const noteEl = document.getElementById("authModeNote");
+
+      if (reason === "unregistered") {
+        currentAuthMode = "signup";
+        if (titleEl) titleEl.textContent = "등록되지 않은 계정이에요!";
+        if (subtitleEl) subtitleEl.textContent = "냉장고 생존기 회원가입을 먼저 진행해 주세요.";
+        if (messageEl) messageEl.textContent = "방금 선택한 Google 계정은 아직 냉장고 생존기에 가입되어 있지 않아요. 아래 버튼을 누르면 회원가입으로 이어집니다.";
+      } else if (currentAuthMode === "signup") {
+        if (titleEl) titleEl.textContent = reason === "withdrawn" ? "다시 회원가입" : "회원가입";
+        if (subtitleEl) subtitleEl.textContent = "Google 계정으로 간단하게 가입할 수 있어요.";
+        if (messageEl) messageEl.textContent = "회원가입이 완료되면 냉장고 기록 저장과 메뉴 추천 AI를 사용할 수 있어요.";
+      } else {
+        if (titleEl) titleEl.textContent = "로그인";
+        if (subtitleEl) subtitleEl.textContent = reason === "feature"
+          ? "이 기능을 사용하려면 먼저 로그인해 주세요."
+          : "가입한 Google 계정으로 로그인해 주세요.";
+        if (messageEl) messageEl.textContent = "로그인하면 기존 냉장고 기록과 메뉴 추천 대화를 이어서 볼 수 있어요.";
+      }
+
+      if (googleBtn) googleBtn.textContent = currentAuthMode === "signup" ? "🔎 Google로 회원가입" : "🔎 Google로 로그인";
+      if (switchBtn) switchBtn.textContent = currentAuthMode === "signup" ? "이미 가입했나요? 로그인" : "처음이신가요? 회원가입";
+      if (noteEl) noteEl.textContent = currentAuthMode === "signup"
+        ? "회원가입 후 같은 Google 계정으로 로그인할 수 있습니다."
+        : "등록되지 않은 계정으로 로그인하면 회원가입 안내로 전환됩니다.";
+    }
+
     function openSignupModal(nextView, reason = "default") {
       pendingView = nextView;
       if (accountModal) accountModal.classList.remove("open");
       if (withdrawConfirmModal) withdrawConfirmModal.classList.remove("open");
-      const titleEl = document.getElementById("signupTitle");
-      const subtitleEl = document.getElementById("signupSubtitle");
-      const messageEl = document.getElementById("signupMessage");
 
-      if (reason === "withdrawn") {
-        if (titleEl) titleEl.textContent = "다시 가입하시겠어요?";
-        if (subtitleEl) subtitleEl.textContent = "회원 탈퇴가 완료되어 현재는 게스트 상태예요.";
-        if (messageEl) messageEl.textContent = "계정과 냉장고·대화 기록이 모두 삭제됐어요. 다시 이용하려면 Google로 가입해 주세요.";
-      } else if (reason === "feature") {
-        if (titleEl) titleEl.textContent = "회원가입이 필요한 기능이에요!";
-        if (subtitleEl) subtitleEl.textContent = "식재료 저장과 메뉴 추천 AI는 회원가입 후 사용할 수 있어요.";
-        if (messageEl) messageEl.textContent = "Google 버튼을 누르면 실제 Google 로그인 화면으로 이동합니다. Naver·Kakao는 준비 중입니다.";
+      if (reason === "unregistered" || reason === "withdrawn" || reason === "signup") {
+        setAuthModalMode("signup", reason);
       } else {
-        if (titleEl) titleEl.textContent = "잠시만요!";
-        if (subtitleEl) subtitleEl.textContent = "로그인하지 않으면 냉장고 기록을 저장할 수 없어요.";
-        if (messageEl) messageEl.textContent = "Google로 로그인하면 기기를 바꿔도 같은 계정의 냉장고 기록을 이어서 볼 수 있습니다.";
+        setAuthModalMode("login", reason);
       }
 
       signupModal.classList.add("open");
@@ -2839,23 +2929,35 @@
       const nicknameInput = document.getElementById("accountNickname");
       const withdrawBtn = document.getElementById("withdrawAccountBtn");
       const alertsBtn = document.getElementById("enableAlertsBtn");
-      if (nicknameInput) nicknameInput.value = getNickname();
-      if (statusEl) statusEl.textContent = isGuestUser() ? "게스트" : "회원";
+      const notificationNote = document.getElementById("notificationNote");
+      const guest = isGuestUser();
+      if (nicknameInput) {
+        nicknameInput.value = getNickname();
+        nicknameInput.disabled = guest;
+        nicknameInput.placeholder = guest ? "로그인 후 설정할 수 있어요" : "";
+      }
+      if (statusEl) statusEl.textContent = guest ? "게스트" : "회원";
       if (providerEl) providerEl.textContent = authState.provider || "미가입";
       if (emailEl) emailEl.textContent = authState.email || (authState.provider ? "소셜 계정에서 제공" : "미등록");
       if (joinedAtEl) joinedAtEl.textContent = authState.joinedAt ? localDateFromTimestamp(authState.joinedAt) : "미가입";
-      if (helpEl) helpEl.textContent = hasNickname()
-        ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
-        : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
+      if (helpEl) helpEl.textContent = guest
+        ? "회원가입/로그인 후 닉네임과 냉장고 기록을 저장할 수 있어요."
+        : hasNickname()
+          ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
+          : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
       if (alertsBtn) {
-        alertsBtn.disabled = isGuestUser();
-        alertsBtn.style.opacity = isGuestUser() ? "0.55" : "";
+        alertsBtn.style.display = guest ? "none" : "";
+        alertsBtn.disabled = false;
+        alertsBtn.style.opacity = "";
         alertsBtn.textContent = ("Notification" in window && Notification.permission === "granted") ? "알림 켜짐" : "알림 켜기";
       }
+      if (notificationNote) notificationNote.style.display = guest ? "none" : "";
       if (withdrawBtn) {
         withdrawBtn.disabled = false;
         withdrawBtn.style.opacity = "";
-        withdrawBtn.textContent = isGuestUser() ? "회원가입 안내" : "회원 탈퇴";
+        withdrawBtn.textContent = guest ? "회원가입/로그인" : "회원 탈퇴";
+        withdrawBtn.classList.toggle("primary-btn", guest);
+        withdrawBtn.classList.toggle("danger-btn", !guest);
       }
     }
 
@@ -2895,7 +2997,7 @@
 
     function withdrawAccount() {
       if (isGuestUser()) {
-        openSignupModal(currentView, "withdrawn");
+        openSignupModal(currentView, "login");
         return;
       }
       openWithdrawConfirmModal();
@@ -4591,20 +4693,14 @@
 
     document.getElementById("closeSignupBtn").addEventListener("click", () => closeSignupModal(true));
     document.getElementById("skipSignupBtn").addEventListener("click", () => closeSignupModal(true));
+    document.getElementById("switchAuthModeBtn").addEventListener("click", () => {
+      setAuthModalMode(currentAuthMode === "login" ? "signup" : "login");
+    });
     signupModal.addEventListener("click", (event) => {
       if (event.target === signupModal) closeSignupModal(true);
     });
-    const googleLoginButton = document.querySelector('[data-provider="Google"]');
-    googleLoginButton?.addEventListener("click", async () => {
-      const redirectTo = `${window.location.origin}${window.location.pathname}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo }
-      });
-      if (error) {
-        console.error("Google 로그인 실패", error);
-        openToast(`Google 로그인 실패: ${error.message}`);
-      }
+    document.getElementById("googleAuthBtn")?.addEventListener("click", () => {
+      void startGoogleAuth(currentAuthMode);
     });
 
     document.getElementById("openAccountBtn").addEventListener("click", openAccountModal);
@@ -4657,7 +4753,17 @@
       openToast("로그인 상태를 확인하지 못했어요.");
     }
 
-    await applySupabaseSession(session);
+    const initialRegistration = await resolveRegistrationSession(session);
+    await applySupabaseSession(initialRegistration.session);
+
+    if (initialRegistration.status === "unregistered") {
+      setTimeout(() => openSignupModal(null, "unregistered"), 120);
+    } else if (initialRegistration.status === "registration_error") {
+      openToast("회원가입 상태를 확인하지 못했어요. profiles 테이블 설정을 확인해 주세요.");
+    } else if (initialRegistration.justSignedUp) {
+      openToast("회원가입이 완료됐어요!");
+    }
+
     if (messages && !messages.children.length) {
       addMessage("bot", isGuestUser()
         ? "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요."
@@ -4666,9 +4772,19 @@
 
     supabase.auth.onAuthStateChange((event, nextSession) => {
       setTimeout(() => {
-        void applySupabaseSession(nextSession, {
-          resetConversation: event === "SIGNED_IN" || event === "SIGNED_OUT"
-        });
+        void (async () => {
+          const resolved = await resolveRegistrationSession(nextSession);
+          await applySupabaseSession(resolved.session, {
+            resetConversation: event === "SIGNED_IN" || event === "SIGNED_OUT"
+          });
+          if (resolved.status === "unregistered") {
+            openSignupModal(null, "unregistered");
+          } else if (resolved.status === "registration_error") {
+            openToast("회원가입 상태를 확인하지 못했어요. profiles 테이블 설정을 확인해 주세요.");
+          } else if (resolved.justSignedUp) {
+            openToast("회원가입이 완료됐어요!");
+          }
+        })();
       }, 0);
     });
 
