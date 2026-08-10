@@ -133,6 +133,94 @@
       align-items: center;
     }
 
+    .notification-btn {
+      position: relative;
+      min-width: 46px;
+      padding-left: 13px;
+      padding-right: 13px;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -6px;
+      right: -5px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 950;
+      border: 2px solid #fff;
+      line-height: 1;
+    }
+
+    .notification-modal-card {
+      width: min(560px, calc(100vw - 28px));
+      max-height: min(720px, calc(100vh - 32px));
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notification-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 12px;
+    }
+
+    .notification-list {
+      display: grid;
+      gap: 9px;
+      overflow-y: auto;
+      padding-right: 3px;
+    }
+
+    .notification-item {
+      width: 100%;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: rgba(255,255,255,.72);
+      color: var(--ink);
+    }
+
+    .notification-item.unread {
+      background: rgba(255, 248, 239, .96);
+      border-color: rgba(255, 122, 89, .30);
+    }
+
+    .notification-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      margin-top: 7px;
+    }
+
+    .notification-item.unread .notification-dot { background: var(--accent); }
+    .notification-message { font-weight: 850; line-height: 1.5; }
+    .notification-time { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .notification-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 34px 14px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      line-height: 1.7;
+    }
+
     .primary-btn, .ghost-btn, .danger-btn {
       border-radius: 999px;
       padding: 12px 16px;
@@ -1404,7 +1492,7 @@
         padding: 12px 14px;
       }
       .quick-actions { justify-content: stretch; flex-direction: column; }
-      .quick-actions .primary-btn, .quick-actions .account-btn { width: 100%; }
+      .quick-actions .primary-btn, .quick-actions .account-btn, .quick-actions .notification-btn { width: 100%; }
       .hero-card, .panel { padding: 20px; }
       .stats-grid, .form-grid, .provider-grid, .auth-fields { grid-template-columns: 1fr; }
       .food-row { grid-template-columns: auto 1fr; }
@@ -1859,6 +1947,7 @@
       </nav>
 
       <div class="quick-actions">
+        <button class="ghost-btn notification-btn" id="openNotificationsBtn" type="button" aria-label="알림함 열기">🔔 알림함<span class="notification-badge" id="notificationBadge">0</span></button>
         <button class="ghost-btn account-btn" id="openAccountBtn" type="button">👤 내 계정</button>
         <button class="primary-btn" id="openAddBtn" type="button">📷 사진으로 추가</button>
       </div>
@@ -2337,6 +2426,23 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="notificationModal">
+    <div class="modal-card notification-modal-card">
+      <div class="modal-head">
+        <div>
+          <h2>알림함</h2>
+          <div class="muted">유통기한이 가까워지거나 지난 식재료를 알려드려요.</div>
+        </div>
+        <button class="close-btn" id="closeNotificationBtn" type="button">×</button>
+      </div>
+      <div class="notification-toolbar">
+        <span class="muted" id="notificationSummary">새 알림이 없어요.</span>
+        <button class="ghost-btn" id="markAllNotificationsReadBtn" type="button">모두 읽음</button>
+      </div>
+      <div class="notification-list" id="notificationList"></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="accountModal">
     <div class="modal-card">
       <div class="modal-head">
@@ -2369,10 +2475,8 @@
           </div>
         </div>
         <div class="form-actions">
-          <button class="ghost-btn" id="enableAlertsBtn" type="button">알림 켜기</button>
           <button class="danger-btn" id="withdrawAccountBtn" type="button">회원 탈퇴</button>
         </div>
-        <div class="notification-note" id="notificationNote">현재 알림은 웹사이트를 열었을 때 임박 재료 수를 알려줍니다. 실제 모바일 푸시는 별도 PWA·푸시 서버 설정이 필요합니다.</div>
         <div class="account-help" id="accountHelp">닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.</div>
       </form>
     </div>
@@ -2407,6 +2511,7 @@
     const AUTH_INTENT_KEY = "fridge-survival-auth-intent-v1";
     const CHAT_KEY = "fridge-survival-chat-v1";
     let foods = [];
+    let notifications = [];
     let currentSession = null;
     let authState = createGuestAuthState();
     let currentView = "home";
@@ -2601,6 +2706,185 @@
       };
     }
 
+    function mapNotificationRow(row) {
+      return {
+        id: row.id,
+        foodId: row.food_id,
+        type: row.type,
+        message: row.message,
+        isRead: Boolean(row.is_read),
+        createdAt: row.created_at
+      };
+    }
+
+    function notificationTimeLabel(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      const now = new Date();
+      const today = formatLocalDate(now);
+      const target = formatLocalDate(date);
+      if (target === today) {
+        return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+      }
+      return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById("notificationList");
+      const badge = document.getElementById("notificationBadge");
+      const summary = document.getElementById("notificationSummary");
+      const markAllBtn = document.getElementById("markAllNotificationsReadBtn");
+      const unreadCount = notifications.filter(item => !item.isRead).length;
+
+      if (badge) {
+        badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+        badge.style.display = unreadCount ? "inline-flex" : "none";
+      }
+      if (summary) summary.textContent = unreadCount ? `새 알림 ${unreadCount}개` : "새 알림이 없어요.";
+      if (markAllBtn) markAllBtn.disabled = unreadCount === 0;
+      if (!list) return;
+
+      if (!notifications.length) {
+        list.innerHTML = `<div class="notification-empty">아직 알림이 없어요.<br>유통기한이 3일 이내로 다가오면 여기에 알려드릴게요.</div>`;
+        return;
+      }
+
+      list.innerHTML = notifications.map(item => `
+        <button class="notification-item ${item.isRead ? "" : "unread"}" type="button" data-notification-id="${escapeHtml(item.id)}">
+          <span class="notification-dot"></span>
+          <span>
+            <span class="notification-message">${escapeHtml(item.message)}</span>
+            <span class="notification-time">${escapeHtml(notificationTimeLabel(item.createdAt))}</span>
+          </span>
+        </button>
+      `).join("");
+
+      list.querySelectorAll("[data-notification-id]").forEach(button => {
+        button.addEventListener("click", () => void markNotificationRead(button.dataset.notificationId));
+      });
+    }
+
+    async function loadNotifications() {
+      if (isGuestUser()) {
+        notifications = [];
+        renderNotifications();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, food_id, type, message, is_read, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error("알림 조회 실패", error);
+        notifications = [];
+        renderNotifications();
+        return;
+      }
+
+      notifications = (data || []).map(mapNotificationRow);
+      renderNotifications();
+    }
+
+    function expiryNotificationForFood(food) {
+      const days = getDaysLeft(food.expiryDate);
+      if (days === null || days > 3) return null;
+
+      let type = "";
+      let message = "";
+      if (days < 0) {
+        type = "expired";
+        message = `${food.name}의 유통기한이 지났어요. 냉장고를 확인해 주세요.`;
+      } else if (days === 0) {
+        type = "today";
+        message = `${food.name}의 유통기한이 오늘까지예요.`;
+      } else {
+        type = "soon";
+        message = days === 1
+          ? `${food.name}의 유통기한이 내일까지예요.`
+          : `${food.name}의 유통기한이 ${days}일 남았어요.`;
+      }
+
+      return {
+        food_id: food.id,
+        user_id: currentSession.user.id,
+        type,
+        message,
+        notification_key: `${food.id}:${food.expiryDate}:${type}`
+      };
+    }
+
+    async function syncExpiryNotifications() {
+      if (isGuestUser() || !foods.length) return;
+      const candidates = foods.map(expiryNotificationForFood).filter(Boolean);
+      if (!candidates.length) return;
+
+      const keys = candidates.map(item => item.notification_key);
+      const { data: existing, error: existingError } = await supabase
+        .from("notifications")
+        .select("notification_key")
+        .in("notification_key", keys);
+
+      if (existingError) {
+        console.error("알림 중복 확인 실패", existingError);
+        return;
+      }
+
+      const existingKeys = new Set((existing || []).map(item => item.notification_key));
+      const missing = candidates.filter(item => !existingKeys.has(item.notification_key));
+      if (!missing.length) return;
+
+      const { error } = await supabase.from("notifications").insert(missing);
+      if (error) console.error("유통기한 알림 생성 실패", error);
+    }
+
+    async function refreshExpiryNotifications() {
+      if (isGuestUser()) return;
+      await syncExpiryNotifications();
+      await loadNotifications();
+    }
+
+    function openNotificationModal() {
+      if (isGuestUser()) {
+        openSignupModal(currentView, "feature");
+        return;
+      }
+      void refreshExpiryNotifications();
+      document.getElementById("notificationModal").classList.add("open");
+    }
+
+    function closeNotificationModal() {
+      document.getElementById("notificationModal").classList.remove("open");
+    }
+
+    async function markNotificationRead(id) {
+      if (!id || isGuestUser()) return;
+      const item = notifications.find(notification => notification.id === id);
+      if (!item || item.isRead) return;
+      const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      if (error) {
+        console.error("알림 읽음 처리 실패", error);
+        return;
+      }
+      item.isRead = true;
+      renderNotifications();
+    }
+
+    async function markAllNotificationsRead() {
+      if (isGuestUser()) return;
+      const unreadIds = notifications.filter(item => !item.isRead).map(item => item.id);
+      if (!unreadIds.length) return;
+      const { error } = await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
+      if (error) {
+        console.error("전체 알림 읽음 처리 실패", error);
+        return;
+      }
+      notifications.forEach(item => { item.isRead = true; });
+      renderNotifications();
+    }
+
     async function loadFoodsFromDatabase() {
       if (isGuestUser()) {
         foods = [];
@@ -2623,7 +2907,8 @@
 
       foods = (data || []).map(mapFoodRow);
       render();
-      maybeShowExpiryAlert();
+      await syncExpiryNotifications();
+      await loadNotifications();
     }
 
     async function applySupabaseSession(session, { resetConversation = false } = {}) {
@@ -2634,6 +2919,8 @@
       if (!user) {
         authState = createGuestAuthState();
         foods = [];
+        notifications = [];
+        renderNotifications();
         if (resetConversation && messages) {
           messages.innerHTML = "";
           addMessage("bot", "회원가입 후 냉장고 재료를 등록하면 메뉴 추천 AI를 사용할 수 있어요.");
@@ -2747,6 +3034,7 @@
     function resetAddFoodForm() {
       addFoodForm.reset();
       document.getElementById("foodStoredDate").value = todayValue();
+    renderNotifications();
       document.getElementById("foodLocation").value = "auto";
       document.getElementById("foodQuantity").value = "1";
       document.getElementById("foodUnit").value = "개";
@@ -2931,8 +3219,6 @@
       const helpEl = document.getElementById("accountHelp");
       const nicknameInput = document.getElementById("accountNickname");
       const withdrawBtn = document.getElementById("withdrawAccountBtn");
-      const alertsBtn = document.getElementById("enableAlertsBtn");
-      const notificationNote = document.getElementById("notificationNote");
       const guest = isGuestUser();
       if (nicknameInput) {
         nicknameInput.value = getNickname();
@@ -2948,13 +3234,6 @@
         : hasNickname()
           ? `메뉴 추천 AI가 ${getCallName()}으로 인식해 답변합니다.`
           : "닉네임을 입력하면 메뉴 추천 AI가 그 이름으로 사용자를 인식해 답변합니다.";
-      if (alertsBtn) {
-        alertsBtn.style.display = guest ? "none" : "";
-        alertsBtn.disabled = false;
-        alertsBtn.style.opacity = "";
-        alertsBtn.textContent = ("Notification" in window && Notification.permission === "granted") ? "알림 켜짐" : "알림 켜기";
-      }
-      if (notificationNote) notificationNote.style.display = guest ? "none" : "";
       if (withdrawBtn) {
         withdrawBtn.disabled = false;
         withdrawBtn.style.opacity = "";
@@ -3742,44 +4021,6 @@
         openToast("선택한 재료를 저장하지 못했어요.");
       } finally {
         if (button) button.disabled = false;
-      }
-    }
-
-    function getExpiringSoonCount() {
-      return foods.filter(food => {
-        const days = getDaysLeft(food.expiryDate);
-        return typeof days === "number" && days >= 0 && days <= 3;
-      }).length;
-    }
-
-    function maybeShowExpiryAlert({ force = false } = {}) {
-      if (isGuestUser()) return;
-      const count = getExpiringSoonCount();
-      if (!count) return;
-      const todayKey = `${currentSession.user.id}:${todayValue()}`;
-      const previous = localStorage.getItem("fridge-expiry-alert-date");
-      if (!force && previous === todayKey) return;
-      localStorage.setItem("fridge-expiry-alert-date", todayKey);
-      const message = `유통기한이 얼마 남지 않은 음식이 ${count}개 있어요!`;
-      openToast(message);
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("냉장고 생존기", { body: message, icon: "/favicon.ico" });
-      }
-    }
-
-    async function enableExpiryAlerts() {
-      if (isGuestUser()) return;
-      if (!("Notification" in window)) {
-        openToast("이 브라우저는 시스템 알림을 지원하지 않아요.");
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      renderAccountUI();
-      if (permission === "granted") {
-        openToast("알림을 켰어요.");
-        maybeShowExpiryAlert({ force: true });
-      } else {
-        openToast("브라우저 설정에서 알림 권한을 허용해 주세요.");
       }
     }
 
@@ -4706,6 +4947,13 @@
       void startGoogleAuth(currentAuthMode);
     });
 
+    document.getElementById("openNotificationsBtn").addEventListener("click", openNotificationModal);
+    document.getElementById("closeNotificationBtn").addEventListener("click", closeNotificationModal);
+    document.getElementById("markAllNotificationsReadBtn").addEventListener("click", () => void markAllNotificationsRead());
+    document.getElementById("notificationModal").addEventListener("click", event => {
+      if (event.target === document.getElementById("notificationModal")) closeNotificationModal();
+    });
+
     document.getElementById("openAccountBtn").addEventListener("click", openAccountModal);
     document.getElementById("closeAccountBtn").addEventListener("click", closeAccountModal);
     accountModal.addEventListener("click", (event) => {
@@ -4718,7 +4966,6 @@
       event.preventDefault();
       void saveNicknameFromAccountInput(true);
     });
-    document.getElementById("enableAlertsBtn").addEventListener("click", enableExpiryAlerts);
     document.getElementById("withdrawAccountBtn").addEventListener("click", withdrawAccount);
     document.getElementById("confirmWithdrawBtn").addEventListener("click", completeWithdrawAccount);
     document.getElementById("cancelWithdrawBtn").addEventListener("click", closeWithdrawConfirmModal);
