@@ -2667,26 +2667,28 @@
       }
     }
 
-    async function getRegistrationProfile(userId) {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
+    // 기존 회원은 그대로 로그인시키고, 새 Google 계정은 명시적으로 회원가입을 완료했는지
+    // Supabase Auth user_metadata로 구분합니다. 별도 profiles 테이블이 없어도 동작합니다.
+    const REGISTRATION_FLOW_CUTOFF = Date.parse("2026-08-10T00:00:00Z");
 
-      if (error) throw error;
-      return data || null;
+    function isExistingMember(user) {
+      if (!user) return false;
+      if (user.user_metadata?.fridge_registered === true) return true;
+
+      const createdAt = Date.parse(user.created_at || "");
+      return Number.isFinite(createdAt) && createdAt < REGISTRATION_FLOW_CUTOFF;
     }
 
-    async function createRegistrationProfile(user) {
-      const { error } = await supabase
-        .from("profiles")
-        .insert({
-          id: user.id,
-          email: user.email || null
-        });
-
+    async function markCurrentUserRegistered(session) {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { fridge_registered: true }
+      });
       if (error) throw error;
+
+      if (data?.user) {
+        return { ...session, user: data.user };
+      }
+      return session;
     }
 
     async function resolveRegistrationSession(session) {
@@ -2695,26 +2697,27 @@
       const intent = localStorage.getItem(AUTH_INTENT_KEY);
 
       try {
-        const profile = await getRegistrationProfile(session.user.id);
-        if (profile) {
+        if (isExistingMember(session.user)) {
           localStorage.removeItem(AUTH_INTENT_KEY);
           return { session, status: "registered" };
         }
 
         if (intent === "signup") {
-          await createRegistrationProfile(session.user);
+          const registeredSession = await markCurrentUserRegistered(session);
           localStorage.removeItem(AUTH_INTENT_KEY);
-          return { session, status: "registered", justSignedUp: true };
+          return { session: registeredSession, status: "registered", justSignedUp: true };
         }
 
+        // Google OAuth는 새 계정도 Auth 사용자로 만들 수 있으므로,
+        // 앱 회원가입을 완료하지 않은 계정은 즉시 로컬 세션을 종료하고 가입 안내를 띄웁니다.
         localStorage.removeItem(AUTH_INTENT_KEY);
         await supabase.auth.signOut({ scope: "local" }).catch(() => {});
         return { session: null, status: "unregistered" };
       } catch (error) {
         console.error("회원가입 상태 확인 실패", error);
         localStorage.removeItem(AUTH_INTENT_KEY);
-        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
-        return { session: null, status: "registration_error", error };
+        // 회원 상태 확인 로직 때문에 정상 로그인까지 막히지 않도록 세션은 유지합니다.
+        return { session, status: "registered", registrationWarning: error };
       }
     }
 
@@ -4759,7 +4762,7 @@
     if (initialRegistration.status === "unregistered") {
       setTimeout(() => openSignupModal(null, "unregistered"), 120);
     } else if (initialRegistration.status === "registration_error") {
-      openToast("회원가입 상태를 확인하지 못했어요. profiles 테이블 설정을 확인해 주세요.");
+      openToast("회원가입 상태 확인 중 문제가 있었지만 로그인은 유지했어요.");
     } else if (initialRegistration.justSignedUp) {
       openToast("회원가입이 완료됐어요!");
     }
@@ -4780,7 +4783,7 @@
           if (resolved.status === "unregistered") {
             openSignupModal(null, "unregistered");
           } else if (resolved.status === "registration_error") {
-            openToast("회원가입 상태를 확인하지 못했어요. profiles 테이블 설정을 확인해 주세요.");
+            openToast("회원가입 상태 확인 중 문제가 있었지만 로그인은 유지했어요.");
           } else if (resolved.justSignedUp) {
             openToast("회원가입이 완료됐어요!");
           }
