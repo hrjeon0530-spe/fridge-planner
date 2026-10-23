@@ -5130,6 +5130,7 @@
   updatePushButton();
 
   pushBtn.addEventListener("click", async () => {
+    alert("1. 버튼 클릭 확인");
     try {
       if (!("Notification" in window)) {
         alert("이 기기에서는 알림을 지원하지 않습니다.");
